@@ -39,6 +39,7 @@ Flowchart coming soon.
 ### Roadmap
 - [ ] Basic instruction implementations
     - [ ] Account flow chart
+- [ ] Create email, twitter, and gitbook
 - [ ] Integrate Metaplex token metadata standard
 - [ ] Create a basic API for other projects to build on
     - [ ] Javascript/Typescript types and instruction wrappers
