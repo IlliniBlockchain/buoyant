@@ -1,4 +1,4 @@
-# On-Chain Subscriptions
+# Buoyant
 
 > "Subs not dubs."
 
