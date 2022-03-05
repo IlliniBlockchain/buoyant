@@ -1,20 +1,17 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
-pub enum ExchangeBoothInstruction {
-    InititializeExchangeBooth {
-        // TODO
-     },
+pub enum SubscriptionInstruction {
+    Initialize {
+        
+    },
     Deposit {
-        // TODO
+
     },
-    Withdraw {
-        // TODO
+    Renew {
+
     },
-    Exchange {
-        // TODO
-    },
-    CloseExchangeBooth {
-        // TODO
-    },
+    Close {
+
+    }
 }
