@@ -4,6 +4,8 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+use spl_token::*;
+
 use crate::instruction::SubscriptionInstruction;
 
 pub struct Processor {}

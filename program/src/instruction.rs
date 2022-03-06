@@ -31,8 +31,7 @@ pub enum SubscriptionInstruction {
     ///   0. `[writable, signer]` payer
     ///   1. `[writable]` payer token account
     ///   2. `[writable]` deposit vault
-    ///   3. `[]` system program for native sol transfers
-    ///   4. `[]` token program for token transfers
+    ///   3. `[]` token program for token transfers
     /// 
     Deposit {
         amount: u64
@@ -47,8 +46,7 @@ pub enum SubscriptionInstruction {
     ///   1. `[writable]` payer token account
     ///   2. `[writable]` deposit vault
     ///   3. `[]` subscription metadata
-    ///   4. `[]` system program for native sol transfers
-    ///   5. `[]` token program for token transfers
+    ///   4. `[]` token program for token transfers
     /// 
     Withdraw {
         amount: u64
