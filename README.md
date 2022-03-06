@@ -25,6 +25,8 @@ When someone opens up a new subscription, they'll specify an amount of money to 
 
 On initialization and renewal of a subscription, an new token mint is created and a token is minted to the payer (and a new associated token account for this particular mint is created as needed). A user's subscription is said to be "active" if the user owns a token from the particular mint. The latest mint's public key will be stored and updated in the subscription's metadata so that products built on top of this protocol have easy access to the necessary data needed to check the active/inactive status of a subscription.
 
+With the issuing of many individual tokens for each subscription, products building on this protocol cannot just check the possession of a specific token as each token is from a different mint. However, in this case, they can just check that the metadata of the subscription--most importantly the amount and duration--match their requirements.
+
 When a subscription is renewed, a new mint will be created. If the deposit vault has enough tokens to renew, the amount will be transferred to the payee and a token from the new mint will be minted to the payer. 
 
 The renewal instruction will be available for anyone to call. A certain percentage of the amount being transferred to the payee will be sent to the caller of the renewal instruction to incentivize a decentralized participation to enforce the renewal/expiry mechanic of the protocol. In the beginning, a centralized crank will be run to ensure the timely functioning of renewals/expirations. Overtime as usage grows, ideally fee incentives should naturally decentralize this mechanic.

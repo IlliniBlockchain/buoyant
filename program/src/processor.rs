@@ -18,16 +18,31 @@ impl Processor {
             .map_err(|_| ProgramError::InvalidInstructionData)?;
 
         match instruction {
-            SubscriptionInstruction::Initialize { } => {
+            SubscriptionInstruction::Initialize { amount, duration } => {
                 msg!("Instruction: Initialize");
+                msg!("amount: {}", amount);
+                msg!("duration: {}", duration);
+                // get accounts
+                // validate accounts
+                // initialize deposity vault
+                // initialize subscription metadata account
             }
-            SubscriptionInstruction::Deposit { } => {
+            SubscriptionInstruction::Deposit { amount } => {
                 msg!("Instruction: Deposit");
+                msg!("amount: {}", amount);
             }
-            SubscriptionInstruction::Renew { } => {
+            SubscriptionInstruction::Withdraw { amount } => {
+                msg!("Instruction: Withdraw");
+                msg!("amount: {}", amount);
+            }
+            SubscriptionInstruction::Renew {} => {
                 msg!("Instruction: Renew ");
+                // create new mint
+                // update metadata
+                // check enough balance
+                    // transfer balance + mint new token
             }
-            SubscriptionInstruction::Close { } => {
+            SubscriptionInstruction::Close {} => {
                 msg!("Instruction: Close");
             }
         }
