@@ -1,4 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::{
+    pubkey::Pubkey,
+};
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub enum SubscriptionInstruction {
@@ -20,6 +23,7 @@ pub enum SubscriptionInstruction {
     ///   7. `[]` associated token program
     /// 
     Initialize {
+        payee: Pubkey,
         amount: u64,
         duration: i64,
     },

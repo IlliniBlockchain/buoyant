@@ -20,8 +20,9 @@ impl Processor {
             .map_err(|_| ProgramError::InvalidInstructionData)?;
 
         match instruction {
-            SubscriptionInstruction::Initialize { amount, duration } => {
+            SubscriptionInstruction::Initialize { payee, amount, duration } => {
                 msg!("Instruction: Initialize");
+                msg!("payee: {}", payee);
                 msg!("amount: {}", amount);
                 msg!("duration: {}", duration);
                 // get accounts
