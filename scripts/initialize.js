@@ -46,6 +46,7 @@ const initializeInstruction = (
   const durationBuffer = Buffer.from(new Uint8Array((new BN(duration)).toArray("le", 8)));
   const inputData = Buffer.concat([idxBuffer, payeeBuffer, amountBuffer, durationBuffer]);
 
+  
   const instruction = new TransactionInstruction({
     keys: accounts,
     programId: programId,
