@@ -29,6 +29,7 @@ impl Processor {
                 // validate accounts
                 // initialize deposity vault
                 // initialize subscription metadata account
+
             }
             SubscriptionInstruction::Deposit { amount } => {
                 msg!("Instruction: Deposit");
