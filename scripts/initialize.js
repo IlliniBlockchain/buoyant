@@ -63,7 +63,6 @@ const findAccounts = async (userKey, payeeKey, amount, duration, mintKey) => {
   const [ subKey, subBump ] = await PublicKey.findProgramAddress(
     [
       Buffer.from("subscription_metadata"),
-      userKey.toBuffer(),
       payeeKey.toBuffer(),
       Buffer.from(new Uint8Array((new BN(amount)).toArray("le", 8))),
       Buffer.from(new Uint8Array((new BN(duration)).toArray("le", 8)))
