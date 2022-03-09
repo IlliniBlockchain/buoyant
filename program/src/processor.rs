@@ -8,12 +8,16 @@ use {
     },
     spl_token::{
         *,
+        error::*,
         state::Account as TokenAccount,
     },
 
     crate::{
         instruction::SubscriptionInstruction,
         state::Subscription,
+        utils::{
+            assert_msg, check_signer, check_pda,
+        },
     }
 };
 
