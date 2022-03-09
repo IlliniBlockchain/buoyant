@@ -1,10 +1,11 @@
 use {
     borsh::BorshDeserialize,
-
     solana_program::{
         account_info::{next_account_info, AccountInfo}, entrypoint::ProgramResult, msg, program_error::ProgramError,
         pubkey::Pubkey,
         program_pack::Pack,
+        system_program,
+        sysvar
     },
     spl_token::{
         *,
@@ -16,7 +17,7 @@ use {
         instruction::SubscriptionInstruction,
         state::Subscription,
         utils::{
-            assert_msg, check_signer, check_pda,
+            assert_msg, check_signer, check_pda, check_ata, check_program_id
         },
     }
 };
@@ -56,21 +57,30 @@ impl Processor {
                 let token_program_ai = next_account_info(accounts_iter)?;
                 let associated_token_program_ai = next_account_info(accounts_iter)?;
 
-                // deserialization
-                let subscription = Subscription::try_from_slice(&subscription_ai.try_borrow_data()?)?;
-                let deposit_vault = TokenAccount::unpack_from_slice(&deposit_vault_ai.try_borrow_data()?)?;
-
 
 
                 // validate accounts
 
                 // signer
+                check_signer(user_ai)?;
 
                 // PDAs
+                let subscription_seeds = &[
+                    b"subscription_metadata",
+                    payee.as_ref(),
+                    &amount.to_le_bytes(),
+                    &duration.to_le_bytes(),
+                ];
+                check_pda(subscription_ai, subscription_seeds, program_id)?;
 
-                // token account match mint
+                // token accounts
+                check_ata(deposit_vault_ai, subscription_ai.key, deposit_mint_ai.key);
 
                 // programs
+                check_program_id(system_program_ai, &system_program::id())?;
+                check_program_id(sysvar_rent_ai, &sysvar::rent::id())?;
+                check_program_id(token_program_ai, &spl_token::id())?;
+                check_program_id(associated_token_program_ai, &spl_associated_token_account::id())?;
 
 
 
