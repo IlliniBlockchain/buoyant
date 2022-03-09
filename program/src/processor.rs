@@ -1,12 +1,21 @@
-use borsh::BorshDeserialize;
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
-    pubkey::Pubkey,
+use {
+    borsh::BorshDeserialize,
+
+    solana_program::{
+        account_info::{next_account_info, AccountInfo}, entrypoint::ProgramResult, msg, program_error::ProgramError,
+        pubkey::Pubkey,
+        program_pack::Pack,
+    },
+    spl_token::{
+        *,
+        state::Account as TokenAccount,
+    },
+
+    crate::{
+        instruction::SubscriptionInstruction,
+        state::Subscription,
+    }
 };
-
-use spl_token::*;
-
-use crate::instruction::SubscriptionInstruction;
 
 pub struct Processor {}
 
@@ -25,10 +34,49 @@ impl Processor {
                 msg!("payee: {}", payee);
                 msg!("amount: {}", amount);
                 msg!("duration: {}", duration);
+
+
+
                 // get accounts
+                let accounts_iter = &mut accounts.iter();
+
+                // accounts
+                let user_ai = next_account_info(accounts_iter)?;
+                let subscription_ai = next_account_info(accounts_iter)?;
+                let deposit_vault_ai = next_account_info(accounts_iter)?;
+                let deposit_mint_ai = next_account_info(accounts_iter)?;
+
+                // programs
+                let system_program_ai = next_account_info(accounts_iter)?;
+                let sysvar_rent_ai = next_account_info(accounts_iter)?;
+                let token_program_ai = next_account_info(accounts_iter)?;
+                let associated_token_program_ai = next_account_info(accounts_iter)?;
+
+                // deserialization
+                let subscription = Subscription::try_from_slice(&subscription_ai.try_borrow_data()?)?;
+                let deposit_vault = TokenAccount::unpack_from_slice(&deposit_vault_ai.try_borrow_data()?)?;
+
+
+
                 // validate accounts
+
+                // signer
+
+                // PDAs
+
+                // token account match mint
+
+                // programs
+
+
+
+                // logic
+
                 // initialize deposity vault
+
                 // initialize subscription metadata account
+
+
 
             }
             SubscriptionInstruction::Deposit { amount } => {
