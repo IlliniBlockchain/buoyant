@@ -1,11 +1,10 @@
-use solana_program::{program_pack::Pack, account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError, pubkey::Pubkey};
-use spl_token::{
-    state::Account as TokenAccount,
-    error::TokenError,
-    *
+use num_derive::FromPrimitive;
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
+    program_pack::Pack, pubkey::Pubkey,
 };
 use spl_associated_token_account::*;
-use num_derive::FromPrimitive;
+use spl_token::{error::TokenError, state::Account as TokenAccount, *};
 use thiserror::Error;
 
 pub fn assert_msg(statement: bool, err: ProgramError, msg: &str) -> ProgramResult {
@@ -35,7 +34,11 @@ pub fn check_pda(account: &AccountInfo, seeds: &[&[u8]], program_id: &Pubkey) ->
     }
 }
 
-pub fn check_ata(account: &AccountInfo, user_address: &Pubkey, mint_address: &Pubkey) -> ProgramResult {
+pub fn check_ata(
+    account: &AccountInfo,
+    user_address: &Pubkey,
+    mint_address: &Pubkey,
+) -> ProgramResult {
     // check pda
     let ata = get_associated_token_address(user_address, mint_address);
     if *account.key != ata {
@@ -45,7 +48,11 @@ pub fn check_ata(account: &AccountInfo, user_address: &Pubkey, mint_address: &Pu
     }
 }
 
-pub fn check_initialized_ata(account: &AccountInfo, user_address: &Pubkey, mint_address: &Pubkey) -> ProgramResult {
+pub fn check_initialized_ata(
+    account: &AccountInfo,
+    user_address: &Pubkey,
+    mint_address: &Pubkey,
+) -> ProgramResult {
     // check account owned by token program
     if *account.owner != spl_token::id() {
         return Err(ProgramError::IllegalOwner.into());
@@ -69,7 +76,6 @@ pub fn check_program_id(account: &AccountInfo, program_id: &Pubkey) -> ProgramRe
         Ok(())
     }
 }
-
 
 #[derive(Error, Debug, Copy, Clone, FromPrimitive, PartialEq)]
 pub enum UtilsError {
