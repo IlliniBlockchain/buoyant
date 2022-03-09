@@ -7,11 +7,11 @@ use std::mem::size_of;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub struct Subscription {
-    mint: Option<Pubkey>,
-    payee: Pubkey,
-    deposit_vault: Pubkey,
-    deposit_mint: Pubkey,
-    amount: u64,
-    duration: UnixTimestamp, // = i64, although will always be positive
-    next_renew_time: UnixTimestamp,
+    pub mint: Option<Pubkey>,
+    pub payee: Pubkey,
+    pub deposit_vault: Pubkey,
+    pub deposit_mint: Pubkey,
+    pub amount: u64,
+    pub duration: UnixTimestamp, // = i64, although will always be positive
+    pub next_renew_time: UnixTimestamp,
 }
