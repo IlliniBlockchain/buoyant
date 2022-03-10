@@ -6,10 +6,6 @@ use thiserror::Error;
 pub enum SubscriptionError {
     #[error("Error is sample.")]
     SampleError,
-}
-
-#[derive(Error, Debug, Copy, Clone, FromPrimitive, PartialEq)]
-pub enum AccountError {
     #[error("Invalid vault owner.")]
     InvalidVaultOwner,
     #[error("Account balance insufficient for requested withdraw amount.")]
