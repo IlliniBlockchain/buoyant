@@ -1,7 +1,7 @@
 use {
     crate::{
         instruction::SubscriptionInstruction,
-        state::Subscription,
+        state::{Subscription, Counter},
         utils::{assert_msg, check_ata, check_pda, check_program_id, check_signer},
     },
     borsh::{BorshSerialize, BorshDeserialize},
@@ -47,6 +47,7 @@ impl Processor {
 
                 // accounts
                 let user_ai = next_account_info(accounts_iter)?;
+                let counter_ai = next_account_info(accounts_iter)?;
                 let subscription_ai = next_account_info(accounts_iter)?;
                 let deposit_vault_ai = next_account_info(accounts_iter)?;
                 let deposit_mint_ai = next_account_info(accounts_iter)?;
@@ -63,25 +64,51 @@ impl Processor {
                 check_signer(user_ai)?;
 
                 // PDAs
-                let subscription_seeds = &[
-                    b"subscription_metadata",
+                let counter_seeds = &[
+                    b"subscription_counter",
                     payee.as_ref(),
                     &amount.to_le_bytes(),
                     &duration.to_le_bytes(),
                 ];
-                check_pda(subscription_ai, subscription_seeds, program_id)?;
-                let (_, bump) = Pubkey::find_program_address(subscription_seeds, program_id);
+                check_pda(counter_ai, counter_seeds, program_id)?;
+                let (_, counter_bump) = Pubkey::find_program_address(counter_seeds, program_id);
+                let counter_seeds = &[
+                    b"subscription_counter",
+                    payee.as_ref(),
+                    &amount.to_le_bytes(),
+                    &duration.to_le_bytes(),
+                    &[counter_bump],
+                ];
+
+                // check initialized
+                let count: u64 = if counter_ai.data_len() == 0 {
+                    0
+                } else {
+                    let counter_data = Counter::try_from_slice(&counter_ai.try_borrow_data()?)?;
+                    counter_data.count
+                };
+
                 let subscription_seeds = &[
                     b"subscription_metadata",
                     payee.as_ref(),
                     &amount.to_le_bytes(),
                     &duration.to_le_bytes(),
-                    &[bump],
+                    &count.to_le_bytes(),
+                ];
+                check_pda(subscription_ai, subscription_seeds, program_id)?;
+                let (_, subscription_bump) = Pubkey::find_program_address(subscription_seeds, program_id);
+                let subscription_seeds = &[
+                    b"subscription_metadata",
+                    payee.as_ref(),
+                    &amount.to_le_bytes(),
+                    &duration.to_le_bytes(),
+                    &count.to_le_bytes(),
+                    &[subscription_bump],
                 ];
 
 
                 // token accounts
-                check_ata(deposit_vault_ai, subscription_ai.key, deposit_mint_ai.key);
+                check_ata(deposit_vault_ai, subscription_ai.key, deposit_mint_ai.key)?;
 
                 // programs
                 check_program_id(system_program_ai, &system_program::id())?;
@@ -137,6 +164,27 @@ impl Processor {
                     next_renew_time: 0, // NOTE
                 };
                 subscription.serialize(&mut *subscription_ai.try_borrow_mut_data()?)?;
+
+                // initialize or increment counter account
+                if count == 0 {
+                    let counter_size = 8;
+                    invoke_signed(
+                        &system_instruction::create_account(
+                            user_ai.key,
+                            counter_ai.key,
+                            rent::Rent::get()?.minimum_balance(8),
+                            counter_size as u64,
+                            program_id,
+                        ),
+                        &[user_ai.clone(), counter_ai.clone(), system_program_ai.clone()],
+                        &[counter_seeds],
+                    )?;
+                }
+
+                let counter = Counter {
+                    count: count + 1,
+                };
+                counter.serialize(&mut *counter_ai.try_borrow_mut_data()?)?;
 
             }
             SubscriptionInstruction::Deposit { amount } => {

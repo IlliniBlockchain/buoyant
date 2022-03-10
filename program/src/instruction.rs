@@ -11,6 +11,7 @@ pub enum SubscriptionInstruction {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable, signer]` user
+    ///   1. `[writable]` (PDA) metadata counter
     ///   1. `[writable]` (PDA) subscription metadata
     ///   2. `[writable]` (PDA) deposit vault
     ///   3. `[]` (PDA) deposit vault mint
