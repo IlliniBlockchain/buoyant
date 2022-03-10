@@ -8,6 +8,8 @@ use spl_token::*;
 
 use crate::instruction::SubscriptionInstruction;
 
+pub mod withdraw;
+
 pub struct Processor {}
 
 impl Processor {
@@ -20,7 +22,11 @@ impl Processor {
             .map_err(|_| ProgramError::InvalidInstructionData)?;
 
         match instruction {
-            SubscriptionInstruction::Initialize { payee, amount, duration } => {
+            SubscriptionInstruction::Initialize {
+                payee,
+                amount,
+                duration,
+            } => {
                 msg!("Instruction: Initialize");
                 msg!("payee: {}", payee);
                 msg!("amount: {}", amount);
@@ -37,13 +43,14 @@ impl Processor {
             SubscriptionInstruction::Withdraw { amount } => {
                 msg!("Instruction: Withdraw");
                 msg!("amount: {}", amount);
+                withdraw::process(program_id, accounts, amount)?;
             }
             SubscriptionInstruction::Renew {} => {
                 msg!("Instruction: Renew ");
                 // create new mint
                 // update metadata
                 // check enough balance
-                    // transfer balance + mint new token
+                // transfer balance + mint new token
             }
             SubscriptionInstruction::Close {} => {
                 msg!("Instruction: Close");

@@ -1,2 +1,4 @@
 program/target
 scripts/node_modules
+
+.DS_Store
