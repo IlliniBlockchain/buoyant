@@ -148,7 +148,7 @@
 
         .center {
             max-width: 1080px;
-            height: 650px;
+            min-height: 650px;
             margin: auto;
             margin-top: 35px;
             margin-bottom: 175px;
@@ -157,33 +157,33 @@
         }
 
         .left-img {
-            float: left;
+            /* float: left; */
+            left: 0;
         }
 
         .right-img {
-            float: right;
+            /* float: right; */
+            right: 0;
+            top: -50px;
         }
 
         .middle-img {
             margin: auto;
-        }
-
-        .abs {
-            position: absolute;
+            left: 50%;
+            top: -50px;
+            transform: translate(-50%, 0%);
+            z-index: -1;
         }
 
         .right-text {
             width: 70%;
             text-align: right;
-            right: 0;
+            float: right;
         }
         .middle-text {
             /* text-align: center;*/
             width: 100%;
             margin: auto;
-            top: 0%;
-            left: 50%;
-            transform: translate(-50%, 0%);
         }
         
         .left-text {
@@ -194,7 +194,8 @@
 
         .bg-fish {
             opacity: 0.5;
-            height: 100%;
+            position: absolute;
+            height: 650px;
             width: auto;
         }
 
@@ -378,7 +379,7 @@
 
     <div class="center">
         <img class="left-img bg-fish" src="./images/model_squid.png" />
-        <div class="right-text abs">
+        <div class="right-text">
             <h2>Stay afloat.</h2>
             <h3>Buoyant is a base protocol for recurring payments built on Solana.</h3>
             <a href="https://www.gitbook.com/" target="_blank"><button class="build-btn">Build on Buoyant</button></a>
@@ -387,7 +388,7 @@
 
     <div class="center">
         <img class="middle-img bg-fish" src="./images/model_turtle.png" />
-        <div class="middle-text abs">
+        <div class="middle-text">
             <h2>On-Chain Subscriptions</h2>
             <div class="three-blocks">
                 <div class="block">
@@ -412,7 +413,7 @@
 
     <div class="center">
         <img class="right-img bg-fish" src="./images/model_jellyfish3.png" />
-        <div class="left-text abs">
+        <div class="left-text">
             <h2>Subs not dubs.</h2>
             <h3>Buoyant is built by a team of hackers from <a class="h3-link" href="https://twitter.com/ILL_Blockchain" target="_blank">Illini Blockchain</a>, a blockchain student organization at the University of Illinois at Urbana-Champaign.</h3>
         </div>
