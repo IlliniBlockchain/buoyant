@@ -32,6 +32,10 @@
 
         }
 
+        body * {
+            box-sizing: border-box;
+        }
+
         h2 {
             font-size: 5rem;
             margin-bottom: 25px;
@@ -117,7 +121,8 @@
             padding: 0 15px;
             margin-left: 50px;
             border: 1px solid rgb(0, 59, 88);
-            border-radius: 5px;
+            /* border: none; */
+            border-radius: 10px;
             background-color: rgb(4, 113, 166);
             color: white;
             font-family: var(--font-main);
@@ -132,24 +137,24 @@
         }
 
         .center {
-            width: 75%;
+            max-width: 1080px;
             height: 650px;
             margin: auto;
             margin-top: 25px;
-            margin-bottom: 300px;
+            margin-bottom: 250px;
             text-align: center;
             position: relative;
         }
 
-        .left {
+        .left-img {
             float: left;
         }
 
-        .right {
+        .right-img {
             float: right;
         }
 
-        .middle {
+        .middle-img {
             margin: auto;
         }
 
@@ -169,6 +174,7 @@
             left: 50%;
             transform: translate(-50%, 0%);
         }
+        
         .left-text {
             text-align: left;
             left: 0;
@@ -187,6 +193,84 @@
             justify-content: center;
             align-items: center;
             background-image: linear-gradient(330deg, rgb(88, 209, 251), rgba(0, 0, 0, 0));
+        }
+
+        .footer {
+            display: flex;
+            justify-content: flex-start;
+            width: 100%;
+            min-height: 300px;
+            background-color: rgb(0, 15, 22);
+            padding: 50px 20%;
+        }
+
+        .footer-left {
+            width: 500px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .footer-contact {
+            opacity: 0.5;
+        }
+
+        .footer-header {
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        /* basically copy middle-nav */
+        .footer-links {
+            width: fit-content;
+            height: 150px;
+            display: flex;
+            justify-content: space-between;
+            flex-direction: column;
+            font-size: 1.2rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+            color: white;
+            font-weight: normal;
+            transition: 0.1s;
+        }
+
+        .footer-links a:hover {
+            opacity: 0.5;
+        }
+
+        @media only screen and (max-width: 800px) {
+            .home-link {
+                margin: auto;
+            }
+            .middle-nav, .right-nav {
+                display: none;
+            }
+            .footer {
+                flex-direction: column;
+                align-items: center;
+            }
+            .footer-logo {
+                justify-content: center;
+            }
+            .footer-contact {
+                text-align: center;
+            }
+            .footer-header {
+                display: none;
+            }
+            .footer-links {
+                width: 300px;
+                height: fit-content;
+                margin-top: 50px;
+                margin-bottom: 50px;
+                flex-direction: row;
+                justify-content: space-around;
+            }
         }
     </style>
 
@@ -224,7 +308,7 @@
     </div> -->
 
     <div class="center">
-        <img class="left bg-fish" src="./images/model_squid.png" />
+        <img class="left-img bg-fish" src="./images/model_squid.png" />
         <div class="right-text abs">
             <h2>Stay afloat.</h2>
             <h3>Buoyant is a base protocol for recurring payments built on Solana.</h3>
@@ -232,7 +316,7 @@
     </div>
 
     <div class="center">
-        <img class="middle bg-fish" src="./images/model_turtle.png" />
+        <img class="middle-img bg-fish" src="./images/model_turtle.png" />
         <div class="middle-text abs">
             <h2>Stay afloat.</h2>
             <h3>Introducing 🦑 Buoyant: A base protocol for recurring payments.</h3>
@@ -241,12 +325,30 @@
 
 
     <div class="center">
-        <img class="right bg-fish" src="./images/model_jellyfish3.png" />
+        <img class="right-img bg-fish" src="./images/model_jellyfish3.png" />
         <div class="left-text abs">
             <h2>Stay afloat.</h2>
             <h3>Introducing 🦑 Buoyant: A base protocol for recurring payments.</h3>
         </div>
     </div>
+
+    <div class="footer">
+
+        <div class="footer-left">
+            <div class="footer-logo">
+                <img class="logo" src="./images/squid_apple.png"/>
+                <h1 class="logo-text">Buoyant</h1>
+            </div>
+            <p class="footer-contact">For additional inquiries, email us at buoyantprotocol@protonmail.com</p>
+        </div>
+        <div class="footer-links">
+            <h4 class="footer-header">Links</h4>
+            <a href="https://www.gitbook.com/" target="_blank">Docs</a>
+            <a href="https://github.com/IlliniBlockchain/buoyant" target="_blank">Github</a>
+            <a href="https://twitter.com/buoyantprotocol" target="_blank">Twitter</a>
+        </div>
+    </div>
+
 </body>
 
 <script>
