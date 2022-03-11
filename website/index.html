@@ -47,6 +47,27 @@
             opacity: 0.7;
         }
 
+        button {
+            transition: .5s ease;
+            position: relative;
+            top: 0;
+
+            width: fit-content;
+            height: 50px;
+            padding: 0 15px;
+            margin-left: 50px;
+            border-radius: 10px;
+            color: white;
+            font-family: var(--font-main);
+            font-size: 1.3rem;
+            font-weight: bold;
+            transition: 0.1s;
+        }
+        button:hover {
+            cursor: pointer;
+            top: -3px;
+        }
+
         .nav {
             height: 100px;
             padding-bottom: 10px;
@@ -116,23 +137,11 @@
         }
 
         .app-btn {
-            width: fit-content;
-            height: 50px;
-            padding: 0 15px;
-            margin-left: 50px;
             border: 1px solid rgb(0, 59, 88);
-            /* border: none; */
-            border-radius: 10px;
             background-color: rgb(4, 113, 166);
-            color: white;
-            font-family: var(--font-main);
-            font-size: 1.3rem;
-            font-weight: bold;
-            transition: 0.1s;
         }
 
         .app-btn:hover {
-            cursor: pointer;
             background-color: rgb(0, 59, 88);
         }
 
@@ -140,8 +149,8 @@
             max-width: 1080px;
             height: 650px;
             margin: auto;
-            margin-top: 25px;
-            margin-bottom: 250px;
+            margin-top: 35px;
+            margin-bottom: 150px;
             text-align: center;
             position: relative;
         }
@@ -186,6 +195,15 @@
             width: auto;
         }
 
+        .build-btn {
+            border: 1px solid rgb(0, 30, 44);
+            background-color: rgb(0, 59, 88);
+        }
+
+        .build-btn:hover {
+            background-color: rgb(0, 30, 44);
+        }
+
         .banner {
             width: 100%;
             height: 200px;
@@ -193,6 +211,27 @@
             justify-content: center;
             align-items: center;
             background-image: linear-gradient(330deg, rgb(88, 209, 251), rgba(0, 0, 0, 0));
+        }
+
+        .contact-box {
+            max-width: 1080px;
+            border-radius: 20px;
+            height: fit-content;
+            padding: 75px 100px;
+            margin: auto;
+            margin-bottom: 100px;
+            text-align: center;
+            background-image: linear-gradient(180deg, rgba(0, 15, 22, 0.6), rgba(0, 15, 22, 0.2));
+        }
+
+        .contact-link {
+            color: white;
+            text-decoration: none;
+            opacity: 0.5;
+            transition: 0.1s;
+        }
+        .contact-link:hover {
+            opacity: 1;
         }
 
         .footer {
@@ -312,6 +351,7 @@
         <div class="right-text abs">
             <h2>Stay afloat.</h2>
             <h3>Buoyant is a base protocol for recurring payments built on Solana.</h3>
+            <a href="https://www.gitbook.com/" target="_blank"><button class="build-btn">Build on Buoyant</button></a>
         </div>
     </div>
 
@@ -330,6 +370,10 @@
             <h2>Stay afloat.</h2>
             <h3>Introducing 🦑 Buoyant: A base protocol for recurring payments.</h3>
         </div>
+    </div>
+
+    <div class="contact-box">
+        <h3>Follow us on Twitter <a class="contact-link" href="https://twitter.com/buoyantprotocol" target="_blank">@buoyantprotocol</a> to stay up to date with our progress.</h3>
     </div>
 
     <div class="footer">
