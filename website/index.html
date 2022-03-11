@@ -29,6 +29,7 @@
             /* font-family: Roboto Mono; */
             line-height: 1.5;
             color: white;
+            overflow-x: hidden;
 
         }
 
@@ -45,7 +46,8 @@
             font-size: 2.5rem;
             margin-top: 25px;
             margin-bottom: 25px;
-            opacity: 0.7;
+            opacity: 0.75;
+            /* color: #ccd; */
         }
 
         button {
@@ -147,7 +149,8 @@
         }
 
         .center {
-            max-width: 1080px;
+            max-width: 90%;
+            width: 1080px;
             min-height: 650px;
             margin: auto;
             margin-top: 35px;
@@ -172,7 +175,6 @@
             left: 50%;
             top: -50px;
             transform: translate(-50%, 0%);
-            z-index: -1;
         }
 
         .right-text {
@@ -197,6 +199,7 @@
             position: absolute;
             height: 650px;
             width: auto;
+            z-index: -1;
         }
 
         .build-btn {
@@ -258,7 +261,7 @@
         .h3-link {
             color: white;
             text-decoration: none;
-            opacity: 0.5;
+            opacity: 0.7;
             transition: 0.1s;
         }
         .h3-link:hover {
@@ -320,6 +323,27 @@
             .middle-nav, .right-nav {
                 display: none;
             }
+
+            .right-text, .left-text {
+                width: 100%;
+                padding: 0 25px;
+            }
+
+            .three-blocks {
+                flex-direction: column;
+                align-items: center;
+                padding: 0 25px;
+            }
+            .block {
+                width: 100%;
+                margin-bottom: 25px;
+            }
+
+            .contact-box {
+                width: 85%;
+                padding: 50px 25px;
+            }
+
             .footer {
                 flex-direction: column;
                 align-items: center;
