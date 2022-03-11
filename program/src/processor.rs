@@ -141,7 +141,7 @@ impl Processor {
                 )?;
 
                 // initialize subscription metadata account
-                let subscription_size = 1+32 + 32 + 32 + 32 + 8 + 8 + 8; // 153
+                let subscription_size = 1 + 1+32 + 32 + 32 + 32 + 8 + 8 + 8; // 154
                 invoke_signed(
                     &system_instruction::create_account(
                         user_ai.key,
@@ -155,10 +155,11 @@ impl Processor {
                 )?;
             
                 let subscription = Subscription {
+                    active: false, // NOTE
                     mint: None, // NOTE
-                    payee: payee,
                     deposit_vault: *deposit_vault_ai.key,
                     deposit_mint: *deposit_mint_ai.key,
+                    payee: payee,
                     amount: amount,
                     duration: duration,
                     next_renew_time: 0, // NOTE

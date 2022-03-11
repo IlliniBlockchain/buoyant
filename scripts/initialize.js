@@ -161,11 +161,6 @@ const main = async () => {
   let subKey2 = accounts.subKey;
   let depositVault2 = accounts.depositVault;
 
-  console.log(user.publicKey);
-  console.log(counterKey2);
-  console.log(subKey2);
-  console.log(depositVault2);
-
   const initIx2 = initializeInstruction(
     user.publicKey,
     counterKey2,
