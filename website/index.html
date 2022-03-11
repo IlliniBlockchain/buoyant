@@ -5,6 +5,8 @@
 
     <title>Buoyant Protocol</title>
     <link rel="icon" type="image/x-icon" href="./images/squid_apple.png">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +31,6 @@
             /* font-family: Roboto Mono; */
             line-height: 1.5;
             color: white;
-            overflow-x: hidden;
 
         }
 
@@ -37,13 +38,17 @@
             box-sizing: border-box;
         }
 
+        .wrapper {
+            overflow-x: hidden;
+        }
+
         h2 {
-            font-size: 5rem;
+            font-size: 5em;
             margin-bottom: 25px;
         }
 
         h3 {
-            font-size: 2.5rem;
+            font-size: 2.5em;
             margin-top: 25px;
             margin-bottom: 25px;
             opacity: 0.75;
@@ -62,7 +67,7 @@
             border-radius: 10px;
             color: white;
             font-family: var(--font-main);
-            font-size: 1.3rem;
+            font-size: 1.3em;
             font-weight: bold;
             transition: 0.1s;
         }
@@ -119,7 +124,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 1.3rem;
+            font-size: 1.3em;
         }
 
         .middle-nav a {
@@ -235,7 +240,7 @@
         }
 
         .block h3 {
-            font-size: 1.7rem;
+            font-size: 1.7em;
         }
 
         .block img {
@@ -244,7 +249,7 @@
         }
 
         .block p {
-            font-size: 1.25rem;
+            font-size: 1.25em;
         }
 
         .contact-box {
@@ -302,7 +307,7 @@
             display: flex;
             justify-content: space-between;
             flex-direction: column;
-            font-size: 1.2rem;
+            font-size: 1.2em;
         }
 
         .footer-links a {
@@ -317,6 +322,14 @@
         }
 
         @media only screen and (max-width: 800px) {
+
+            h2 {
+                font-size: 3.4em;
+            }
+            h3 {
+                font-size: 2em;
+            }
+
             .home-link {
                 margin: auto;
             }
@@ -324,15 +337,21 @@
                 display: none;
             }
 
+            .center {
+                max-width: 95%;
+            }
             .right-text, .left-text {
                 width: 100%;
-                padding: 0 25px;
+                padding: 0 15px;
+            }
+            .left-img {
+                left: -35%;
             }
 
             .three-blocks {
                 flex-direction: column;
                 align-items: center;
-                padding: 0 25px;
+                padding: 0 15px;
             }
             .block {
                 width: 100%;
@@ -341,7 +360,7 @@
 
             .contact-box {
                 width: 85%;
-                padding: 50px 25px;
+                padding: 50px 15px;
             }
 
             .footer {
@@ -372,6 +391,8 @@
 </head>
 
 <body>
+<div class="wrapper">
+
 
     <div class="nav">
         <a class="home-link" href="/">
@@ -463,6 +484,8 @@
             <a href="https://twitter.com/buoyantprotocol" target="_blank">Twitter</a>
         </div>
     </div>
+
+</div>
 
 </body>
 
