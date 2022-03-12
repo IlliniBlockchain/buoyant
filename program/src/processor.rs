@@ -200,6 +200,28 @@ impl Processor {
             SubscriptionInstruction::Renew {} => {
                 msg!("Instruction: Renew ");
 
+                // GET ACCOUNTS
+                let accounts_iter = &mut accounts.iter();
+
+                let caller_ai = next_account_info(accounts_iter)?;
+                let subscription_ai = next_account_info(accounts_iter)?;
+                let deposit_vault_ai = next_account_info(accounts_iter)?;
+                let payee_vault_ai = next_account_info(accounts_iter)?;
+                let caller_vault_ai = next_account_info(accounts_iter)?;
+                let new_token_mint_ai = next_account_info(accounts_iter)?;
+                let payer_new_vault_ai = next_account_info(accounts_iter)?;
+                let payer_old_vault_ai = next_account_info(accounts_iter)?;
+
+                let system_program_ai = next_account_info(accounts_iter)?;
+                let sysvar_rent_ai = next_account_info(accounts_iter)?;
+                let token_program_ai = next_account_info(accounts_iter)?;
+                let associated_token_program_ai = next_account_info(accounts_iter)?;
+
+                // VALIDATE ACCOUNTS
+                
+
+                // LOGIC
+
                 // check time, if not time, throw error
 
                 // checks balance, if not enough, deactivate, return
