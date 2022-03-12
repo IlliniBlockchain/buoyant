@@ -1,12 +1,24 @@
-use borsh::BorshDeserialize;
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
-    pubkey::Pubkey,
+use {
+    crate::{
+        instruction::SubscriptionInstruction,
+        state::{Subscription, Counter},
+        utils::{assert_msg, check_ata, check_pda, check_program_id, check_signer},
+    },
+    borsh::{BorshSerialize, BorshDeserialize},
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        msg,
+        program::{invoke, invoke_signed},
+        program_error::ProgramError,
+        program_pack::Pack,
+        pubkey::Pubkey,
+        system_instruction,
+        system_program,
+        sysvar::{rent, Sysvar},
+    },
+    spl_token::{error::*, state::Account as TokenAccount, *},
 };
-
-use spl_token::*;
-
-use crate::instruction::SubscriptionInstruction;
 
 pub struct Processor {}
 
@@ -20,15 +32,161 @@ impl Processor {
             .map_err(|_| ProgramError::InvalidInstructionData)?;
 
         match instruction {
-            SubscriptionInstruction::Initialize { payee, amount, duration } => {
+            SubscriptionInstruction::Initialize {
+                payee,
+                amount,
+                duration,
+            } => {
                 msg!("Instruction: Initialize");
                 msg!("payee: {}", payee);
                 msg!("amount: {}", amount);
                 msg!("duration: {}", duration);
+
                 // get accounts
+                let accounts_iter = &mut accounts.iter();
+
+                // accounts
+                let user_ai = next_account_info(accounts_iter)?;
+                let counter_ai = next_account_info(accounts_iter)?;
+                let subscription_ai = next_account_info(accounts_iter)?;
+                let deposit_vault_ai = next_account_info(accounts_iter)?;
+                let deposit_mint_ai = next_account_info(accounts_iter)?;
+
+                // programs
+                let system_program_ai = next_account_info(accounts_iter)?;
+                let sysvar_rent_ai = next_account_info(accounts_iter)?;
+                let token_program_ai = next_account_info(accounts_iter)?;
+                let associated_token_program_ai = next_account_info(accounts_iter)?;
+
                 // validate accounts
+
+                // signer
+                check_signer(user_ai)?;
+
+                // PDAs
+                let counter_seeds = &[
+                    b"subscription_counter",
+                    payee.as_ref(),
+                    &amount.to_le_bytes(),
+                    &duration.to_le_bytes(),
+                ];
+                check_pda(counter_ai, counter_seeds, program_id)?;
+                let (_, counter_bump) = Pubkey::find_program_address(counter_seeds, program_id);
+                let counter_seeds = &[
+                    b"subscription_counter",
+                    payee.as_ref(),
+                    &amount.to_le_bytes(),
+                    &duration.to_le_bytes(),
+                    &[counter_bump],
+                ];
+
+                // check initialized
+                let count: u64 = if counter_ai.data_len() == 0 {
+                    0
+                } else {
+                    let counter_data = Counter::try_from_slice(&counter_ai.try_borrow_data()?)?;
+                    counter_data.count
+                };
+
+                let subscription_seeds = &[
+                    b"subscription_metadata",
+                    payee.as_ref(),
+                    &amount.to_le_bytes(),
+                    &duration.to_le_bytes(),
+                    &count.to_le_bytes(),
+                ];
+                check_pda(subscription_ai, subscription_seeds, program_id)?;
+                let (_, subscription_bump) = Pubkey::find_program_address(subscription_seeds, program_id);
+                let subscription_seeds = &[
+                    b"subscription_metadata",
+                    payee.as_ref(),
+                    &amount.to_le_bytes(),
+                    &duration.to_le_bytes(),
+                    &count.to_le_bytes(),
+                    &[subscription_bump],
+                ];
+
+
+                // token accounts
+                check_ata(deposit_vault_ai, subscription_ai.key, deposit_mint_ai.key)?;
+
+                // programs
+                check_program_id(system_program_ai, &system_program::id())?;
+                check_program_id(sysvar_rent_ai, &rent::id())?;
+                check_program_id(token_program_ai, &spl_token::id())?;
+                check_program_id(
+                    associated_token_program_ai,
+                    &spl_associated_token_account::id(),
+                )?;
+
+                // logic
+
                 // initialize deposity vault
+                invoke(
+                    &spl_associated_token_account::create_associated_token_account(
+                        user_ai.key,
+                        subscription_ai.key,
+                        deposit_mint_ai.key,
+                    ),
+                    &[
+                        user_ai.clone(),
+                        deposit_vault_ai.clone(),
+                        subscription_ai.clone(),
+                        deposit_mint_ai.clone(),
+                        system_program_ai.clone(),
+                        token_program_ai.clone(),
+                        sysvar_rent_ai.clone(),
+                        associated_token_program_ai.clone(),
+                    ],
+                )?;
+
                 // initialize subscription metadata account
+                let subscription_size = 1 + 1+32 + 32 + 32 + 32 + 8 + 8 + 8; // 154
+                invoke_signed(
+                    &system_instruction::create_account(
+                        user_ai.key,
+                        subscription_ai.key,
+                        rent::Rent::get()?.minimum_balance(subscription_size),
+                        subscription_size as u64,
+                        program_id,
+                    ),
+                    &[user_ai.clone(), subscription_ai.clone(), system_program_ai.clone()],
+                    &[subscription_seeds],
+                )?;
+            
+                let subscription = Subscription {
+                    active: false, // NOTE
+                    mint: None, // NOTE
+                    deposit_vault: *deposit_vault_ai.key,
+                    deposit_mint: *deposit_mint_ai.key,
+                    payee: payee,
+                    amount: amount,
+                    duration: duration,
+                    next_renew_time: 0, // NOTE
+                };
+                subscription.serialize(&mut *subscription_ai.try_borrow_mut_data()?)?;
+
+                // initialize or increment counter account
+                if count == 0 {
+                    let counter_size = 8;
+                    invoke_signed(
+                        &system_instruction::create_account(
+                            user_ai.key,
+                            counter_ai.key,
+                            rent::Rent::get()?.minimum_balance(8),
+                            counter_size as u64,
+                            program_id,
+                        ),
+                        &[user_ai.clone(), counter_ai.clone(), system_program_ai.clone()],
+                        &[counter_seeds],
+                    )?;
+                }
+
+                let counter = Counter {
+                    count: count + 1,
+                };
+                counter.serialize(&mut *counter_ai.try_borrow_mut_data()?)?;
+
             }
             SubscriptionInstruction::Deposit { amount } => {
                 msg!("Instruction: Deposit");
@@ -43,7 +201,7 @@ impl Processor {
                 // create new mint
                 // update metadata
                 // check enough balance
-                    // transfer balance + mint new token
+                // transfer balance + mint new token
             }
             SubscriptionInstruction::Close {} => {
                 msg!("Instruction: Close");

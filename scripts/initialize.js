@@ -21,6 +21,7 @@ const connection = new Connection("https://api.devnet.solana.com/");
 
 const initializeInstruction = (
   user,
+  counterKey,
   subData,
   depositVault,
   depositVaultMint,
@@ -31,6 +32,7 @@ const initializeInstruction = (
 
   const accounts = [
     { pubkey: user, isSigner: true, isWritable: true },
+    { pubkey: counterKey, isSigner: false, isWritable: true },
     { pubkey: subData, isSigner: false, isWritable: true },
     { pubkey: depositVault, isSigner: false, isWritable: true },
     { pubkey: depositVaultMint, isSigner: false, isWritable: false },
@@ -58,18 +60,35 @@ const initializeInstruction = (
 
 const findAccounts = async (userKey, payeeKey, amount, duration, mintKey) => {
 
-  // get subscriptions metadata PDA
-  // "subscription_metadata", user pubkey, payee
-  const [ subKey, subBump ] = await PublicKey.findProgramAddress(
+  // get counter PDA
+  const [ counterKey, counterBump ] = await PublicKey.findProgramAddress(
     [
-      Buffer.from("subscription_metadata"),
-      userKey.toBuffer(),
+      Buffer.from("subscription_counter"),
       payeeKey.toBuffer(),
       Buffer.from(new Uint8Array((new BN(amount)).toArray("le", 8))),
       Buffer.from(new Uint8Array((new BN(duration)).toArray("le", 8)))
     ],
     programId
   );
+
+  // get count
+  const account = (await connection.getAccountInfo(counterKey));
+  const count = (account == null || account.data.length == 0) ? new BN(0) : new BN(account.data, endian = "le");
+  console.log("count:", count);
+
+  // get subscriptions metadata PDA
+  // "subscription_metadata", user pubkey, payee
+  const [ subKey, subBump ] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from("subscription_metadata"),
+      payeeKey.toBuffer(),
+      Buffer.from(new Uint8Array((new BN(amount)).toArray("le", 8))),
+      Buffer.from(new Uint8Array((new BN(duration)).toArray("le", 8))),
+      Buffer.from(new Uint8Array(count.toArray("le", 8)))
+    ],
+    programId
+  );
+
 
   // get associated token account
   const depositVault = await Token.getAssociatedTokenAddress(
@@ -81,6 +100,7 @@ const findAccounts = async (userKey, payeeKey, amount, duration, mintKey) => {
   );
 
   return {
+    counterKey,
     subKey,
     depositVault,
   }
@@ -94,7 +114,7 @@ const main = async () => {
 
   const payee = new Keypair();
 
-  const { subKey, depositVault } = await findAccounts(
+  let { counterKey, subKey, depositVault } = await findAccounts(
     user.publicKey,
     payee.publicKey,
     amount,
@@ -104,6 +124,7 @@ const main = async () => {
 
   const initIx = initializeInstruction(
     user.publicKey,
+    counterKey,
     subKey,
     depositVault,
     mintKey,
@@ -127,6 +148,45 @@ const main = async () => {
   );
 
   console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+
+  // run it again to make sure increments counter
+  let accounts = await findAccounts(
+    user.publicKey,
+    payee.publicKey,
+    amount,
+    duration,
+    mintKey
+  );
+  let counterKey2 = accounts.counterKey;
+  let subKey2 = accounts.subKey;
+  let depositVault2 = accounts.depositVault;
+
+  const initIx2 = initializeInstruction(
+    user.publicKey,
+    counterKey2,
+    subKey2,
+    depositVault2,
+    mintKey,
+    payee.publicKey,
+    amount,
+    duration,
+  );
+
+  const tx2 = new Transaction();
+  tx2.add(initIx2);
+
+  const txid2 = await sendAndConfirmTransaction(
+    connection,
+    tx2,
+    [ user ],
+    {
+      skipPreflight: true,
+      preflightCommitment: "confirmed",
+      confirmation: "confirmed",
+    }
+  );
+
+  console.log(`https://explorer.solana.com/tx/${txid2}?cluster=devnet`);
 
 }
 
