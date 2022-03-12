@@ -15,6 +15,8 @@ const {
 } = require("@solana/spl-token");
 const BN = require("bn.js");
 
+const { findTokenHolder } = require('./temp');
+
 const { mintAuthority, user, mintKey } = require("./setup/keys.js");
 const programId = new PublicKey("FdmChujE5rEhsvmTUvz1gbfoU3bKSWi52YuSqghNaDhj");
 const connection = new Connection("https://api.devnet.solana.com/");
@@ -153,9 +155,25 @@ const findRenewAccounts = async (
   } else if (initialized) {
 
     // get mint and all that
-    const mintAccount = (await connection.getAccountInfo(currentMint));
+    const currentMint = new PublicKey(subAccount.data.slice(2, 34));
     // need to use explorer or smth to trace the token owner
-    // TODO
+    const payer = await findTokenHolder(currentMint);
+
+    payerNewVault = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      newMint,
+      payer,
+      true,
+    );
+
+    payerOldVault = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      currentMint,
+      payer,
+      true,
+    );
 
   } else {
     throw 'Not initialized and no payer provided';
@@ -179,7 +197,7 @@ const main = async () => {
   const duration = parseInt(args[2]);
   const count = parseInt(args[3]);
 
-  const payer = count === 0 ? new Keypair().publicKey : null;
+  const payer = new Keypair().publicKey;
   const caller = user;
   const {
     subKey,
@@ -196,7 +214,7 @@ const main = async () => {
     amount,
     duration,
     count,
-    payer
+    // payer
   );
 
   const renewIx = renewInstruction(
