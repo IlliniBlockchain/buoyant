@@ -70,12 +70,11 @@ pub enum SubscriptionInstruction {
     ///   4. `[writable]` (PDA) caller vault
     ///   5. `[writable]` (PDA) new token mint
     ///   6. `[writable]` (PDA) payer new token vault
-    ///   7. `[]` payer
-    ///   8. `[]` (PDA) payer old token vault
-    ///   9. `[]` system program
-    ///   10. `[]` sysvar rent program
-    ///   11. `[]` token program
-    ///   12. `[]` associated token program
+    ///   7. `[]` (PDA) payer old token vault
+    ///   8. `[]` system program
+    ///   9. `[]` sysvar rent program
+    ///   10. `[]` token program
+    ///   11. `[]` associated token program
     ///
     Renew {},
 

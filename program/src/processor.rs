@@ -141,7 +141,7 @@ impl Processor {
                 )?;
 
                 // initialize subscription metadata account
-                let subscription_size = 1 + 1+32 + 32 + 32 + 32 + 8 + 8 + 8; // 154
+                let subscription_size = 1 + 1+32 + 32 + 32 + 32 + 8 + 8 + 8 + 8; // 162
                 invoke_signed(
                     &system_instruction::create_account(
                         user_ai.key,
@@ -163,6 +163,7 @@ impl Processor {
                     amount: amount,
                     duration: duration,
                     next_renew_time: 0, // NOTE
+                    renewal_count: 0,
                 };
                 subscription.serialize(&mut *subscription_ai.try_borrow_mut_data()?)?;
 

@@ -22,7 +22,7 @@ const connection = new Connection("https://api.devnet.solana.com/");
 const initializeInstruction = (
   user,
   counterKey,
-  subData,
+  subKey,
   depositVault,
   depositVaultMint,
   payeeKey,
@@ -33,7 +33,7 @@ const initializeInstruction = (
   const accounts = [
     { pubkey: user, isSigner: true, isWritable: true },
     { pubkey: counterKey, isSigner: false, isWritable: true },
-    { pubkey: subData, isSigner: false, isWritable: true },
+    { pubkey: subKey, isSigner: false, isWritable: true },
     { pubkey: depositVault, isSigner: false, isWritable: true },
     { pubkey: depositVaultMint, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
@@ -110,14 +110,13 @@ const findAccounts = async (userKey, payeeKey, amount, duration, mintKey) => {
 
 const main = async () => {
   let args = process.argv.slice(2);
-  const amount = parseInt(args[0]);
-  const duration = parseInt(args[1]);
-
-  const payee = new Keypair();
+  const payee = new PublicKey(args[0]);
+  const amount = parseInt(args[1]);
+  const duration = parseInt(args[2]);
 
   let { counterKey, subKey, depositVault } = await findAccounts(
     user.publicKey,
-    payee.publicKey,
+    payee,
     amount,
     duration,
     mintKey
@@ -129,7 +128,7 @@ const main = async () => {
     subKey,
     depositVault,
     mintKey,
-    payee.publicKey,
+    payee,
     amount,
     duration,
   );
@@ -153,7 +152,7 @@ const main = async () => {
   // run it again to make sure increments counter
   let accounts = await findAccounts(
     user.publicKey,
-    payee.publicKey,
+    payee,
     amount,
     duration,
     mintKey
@@ -168,7 +167,7 @@ const main = async () => {
     subKey2,
     depositVault2,
     mintKey,
-    payee.publicKey,
+    payee,
     amount,
     duration,
   );

@@ -18,6 +18,7 @@ pub struct Subscription {
     pub duration: UnixTimestamp, // = i64, although will always be positive
 
     pub next_renew_time: UnixTimestamp,
+    pub renewal_count: u64,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
