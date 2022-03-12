@@ -15,9 +15,9 @@ const {
 } = require("@solana/spl-token");
 const BN = require("bn.js");
 
-const { findTokenHolder } = require('./temp');
+const { findTokenHolder } = require('./utils/findTokenHolder');
 
-const { mintAuthority, user, mintKey } = require("./setup/keys.js");
+const { mintAuthority, user, mintKey } = require("./utils/keys.js");
 const programId = new PublicKey("FdmChujE5rEhsvmTUvz1gbfoU3bKSWi52YuSqghNaDhj");
 const connection = new Connection("https://api.devnet.solana.com/");
 

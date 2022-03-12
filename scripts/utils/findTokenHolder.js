@@ -1,20 +1,15 @@
-
-// const { Subscription } = require("./dist/subscription");
+// This file is a sloppy attempt at recreating the
+// solana block explorer functionality of finding
+// the transfers involving a certain token
+// and grabbing the latest one - this is used
+// for finding the latest token holder of a
+// subscription NFT. There's probably a much better
+// way of doing this, but at the time it did not
+// seem code from the explorer could be easily imported
+// as an npm module, so I basically replicated
+// similar functionality and imported what I needed.
 
 const { Keypair, Connection, PublicKey } = require("@solana/web3.js");
-
-// const {
-//   Keypair, PublicKey,
-// } = require("@solana/web3.js");
-
-// const payee = new Keypair();
-// console.log(payee.publicKey.toBase58());
-
-// const sub = new Subscription(Buffer.from([]));
-
-// const pubkey = new Keypair();
-
-
 const { type, any, Infer, string, create, optional, array, enums, coerce, instance, union, number } = require("superstruct");
 
 const PublicKeyFromString = coerce(
@@ -81,38 +76,8 @@ const TransferChecked = type({
   tokenAmount: TokenAmountUi,
 });
 
-class InstructionContainer {
-  // readonly instructions: InstructionItem[];
-
-  static create(parsedTransaction) {
-    return new InstructionContainer(parsedTransaction);
-  }
-
-  constructor(parsedTransaction) {
-    this.instructions = parsedTransaction.transaction.message.instructions.map(
-      (instruction) => {
-        if ("parsed" in instruction) {
-          if (typeof instruction.parsed === "object") {
-            instruction.parsed = create(instruction.parsed, ParsedInfo);
-          } else if (typeof instruction.parsed !== "string") {
-            throw new Error("Unexpected parsed response");
-          }
-        }
-
-        return {
-          instruction,
-          inner: [],
-        };
-      }
-    );
-
-    if (parsedTransaction.meta?.innerInstructions) {
-      for (let inner of parsedTransaction.meta.innerInstructions) {
-        this.instructions[inner.index].inner.push(...inner.instructions);
-      }
-    }
-  }
-}
+// previously was trying to use an InstructionContainer class
+// if that's any help for someone in the future reading this
 
 function getTransfer(
   instruction,
