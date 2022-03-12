@@ -199,10 +199,15 @@ impl Processor {
             }
             SubscriptionInstruction::Renew {} => {
                 msg!("Instruction: Renew ");
-                // create new mint
-                // update metadata
-                // check enough balance
-                // transfer balance + mint new token
+
+                // check time, if not time, throw error
+
+                // checks balance, if not enough, deactivate, return
+
+                // check possession of token from current mint, if not, throw error
+
+                // transfer to payee, transfer to caller, create mint, mint token
+
             }
             SubscriptionInstruction::Close {} => {
                 msg!("Instruction: Close");
