@@ -191,6 +191,7 @@ const findRenewAccounts = async (
 };
 
 const main = async () => {
+  
   let args = process.argv.slice(2);
   const payee = new PublicKey(args[0]);
   const amount = parseInt(args[1]);
