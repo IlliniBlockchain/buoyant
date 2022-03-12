@@ -57,6 +57,9 @@ pub enum SubscriptionInstruction {
     /// funds to payee specified by metadata, as well as a small fee to the caller of this
     /// function, and mint a new token to the payer for maintaining an active subscription.
     /// If the vault balance is not high enough, it will not transfer funds or mint a token.
+    /// Also checks that the person to receive the new token is the current owner of the
+    /// subscription. If subscription has yet to be initialized (no current mint), it won't
+    /// perform this check.
     ///
     /// Accounts expected by this instruction:
     ///
@@ -66,11 +69,12 @@ pub enum SubscriptionInstruction {
     ///   3. `[writable]` (PDA) payee vault
     ///   4. `[writable]` (PDA) caller vault
     ///   5. `[writable]` (PDA) new token mint
-    ///   6. `[writable]` (PDA) payer token vault
-    ///   7. `[]` system program
-    ///   8. `[]` sysvar rent program
-    ///   9. `[]` token program
-    ///   10. `[]` associated token program
+    ///   6. `[writable]` (PDA) payer new token vault
+    ///   7. `[]` (PDA) payer old token vault
+    ///   8. `[]` system program
+    ///   9. `[]` sysvar rent program
+    ///   10. `[]` token program
+    ///   11. `[]` associated token program
     ///
     Renew {},
 
