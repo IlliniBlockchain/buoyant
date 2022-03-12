@@ -1,9 +1,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
-    clock::{Clock, UnixTimestamp},
+    // clock::UnixTimestamp,
     pubkey::Pubkey,
 };
-use std::mem::size_of;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub struct Subscription {
@@ -15,9 +14,9 @@ pub struct Subscription {
 
     pub payee: Pubkey,
     pub amount: u64,
-    pub duration: UnixTimestamp, // = i64, although will always be positive
+    pub duration: i64, // = UnixTimestamp, although will always be positive
 
-    pub next_renew_time: UnixTimestamp,
+    pub next_renew_time: i64,
     pub renewal_count: u64,
 }
 

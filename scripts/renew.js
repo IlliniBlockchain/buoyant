@@ -18,7 +18,7 @@ const BN = require("bn.js");
 const { findTokenHolder } = require('./utils/findTokenHolder');
 
 const { mintAuthority, user, mintKey } = require("./utils/keys.js");
-const programId = new PublicKey("FdmChujE5rEhsvmTUvz1gbfoU3bKSWi52YuSqghNaDhj");
+const programId = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
 const connection = new Connection("https://api.devnet.solana.com/");
 
 const renewInstruction = (
@@ -30,7 +30,8 @@ const renewInstruction = (
   newMint,
   payerNewVault,
   payerOldVault,
-  count
+  count,
+  payer
 ) => {
   const accounts = [
     { pubkey: callerKey, isSigner: true, isWritable: true },
@@ -48,10 +49,11 @@ const renewInstruction = (
   ];
 
   const idxBuffer = Buffer.from(new Uint8Array([3]));
-  // const countBuffer = Buffer.from(
-  //   new Uint8Array(new BN(count).toArray("le", 8))
-  // );
-  const inputData = Buffer.concat([idxBuffer]);
+  const countBuffer = Buffer.from(
+    new Uint8Array(new BN(count).toArray("le", 8))
+  );
+  const payerBuffer = payer.toBuffer();
+  const inputData = Buffer.concat([idxBuffer, countBuffer, payerBuffer]);
 
   const instruction = new TransactionInstruction({
     keys: accounts,
@@ -113,7 +115,9 @@ const findRenewAccounts = async (
 
   // newMint...need to define scheme
   const subAccount = (await connection.getAccountInfo(subKey));
-  const mintCount = new BN(subAccount.data.slice(subAccount.data.length - 8));
+  // console.log(subAccount.data.length);
+  // subAccount.data.forEach((val, idx) => console.log(idx, val));
+  const mintCount = new BN(subAccount.data.slice(154, 162));
 
   const [ newMint, newMintBump ] = await PublicKey.findProgramAddress(
     [
@@ -157,7 +161,7 @@ const findRenewAccounts = async (
     // get mint and all that
     const currentMint = new PublicKey(subAccount.data.slice(2, 34));
     // need to use explorer or smth to trace the token owner
-    const payer = await findTokenHolder(currentMint);
+    payer = await findTokenHolder(currentMint);
 
     payerNewVault = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -187,6 +191,7 @@ const findRenewAccounts = async (
     newMint,
     payerNewVault,
     payerOldVault,
+    payer
   };
 };
 
@@ -198,7 +203,7 @@ const main = async () => {
   const duration = parseInt(args[2]);
   const count = parseInt(args[3]);
 
-  const payer = new Keypair().publicKey;
+  const payerTemp = new Keypair().publicKey;
   const caller = user;
   const {
     subKey,
@@ -208,6 +213,7 @@ const main = async () => {
     newMint,
     payerNewVault,
     payerOldVault,
+    payer
   } = await findRenewAccounts(
     caller.publicKey,
     mintKey,
@@ -215,7 +221,7 @@ const main = async () => {
     amount,
     duration,
     count,
-    // payer
+    payerTemp
   );
 
   const renewIx = renewInstruction(
@@ -227,7 +233,8 @@ const main = async () => {
     newMint,
     payerNewVault,
     payerOldVault,
-    // count,
+    count,
+    payer,
   );
 
   const tx = new Transaction();

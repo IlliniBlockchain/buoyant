@@ -2,7 +2,7 @@ use {
     crate::{
         instruction::SubscriptionInstruction,
         state::{Subscription, Counter},
-        utils::{assert_msg, check_ata, check_pda, check_program_id, check_signer},
+        utils::{check_ata, check_initialized_ata, check_pda, check_program_id, check_signer, check_writable},
     },
     borsh::{BorshSerialize, BorshDeserialize},
     solana_program::{
@@ -17,7 +17,7 @@ use {
         system_program,
         sysvar::{rent, Sysvar},
     },
-    spl_token::{error::*, state::Account as TokenAccount, *},
+    spl_token::{error::TokenError, state::Account as TokenAccount},
 };
 
 pub struct Processor {}
@@ -155,7 +155,7 @@ impl Processor {
                 )?;
             
                 let subscription = Subscription {
-                    active: false, // NOTE
+                    active: false, // false, // NOTE
                     mint: None, // NOTE
                     deposit_vault: *deposit_vault_ai.key,
                     deposit_mint: *deposit_mint_ai.key,
@@ -197,8 +197,8 @@ impl Processor {
                 msg!("Instruction: Withdraw");
                 msg!("amount: {}", amount);
             }
-            SubscriptionInstruction::Renew {} => {
-                msg!("Instruction: Renew ");
+            SubscriptionInstruction::Renew { count, payer } => {
+                msg!("Instruction: Renew");
 
                 // GET ACCOUNTS
                 let accounts_iter = &mut accounts.iter();
@@ -208,7 +208,7 @@ impl Processor {
                 let deposit_vault_ai = next_account_info(accounts_iter)?;
                 let payee_vault_ai = next_account_info(accounts_iter)?;
                 let caller_vault_ai = next_account_info(accounts_iter)?;
-                let new_token_mint_ai = next_account_info(accounts_iter)?;
+                let new_mint_ai = next_account_info(accounts_iter)?;
                 let payer_new_vault_ai = next_account_info(accounts_iter)?;
                 let payer_old_vault_ai = next_account_info(accounts_iter)?;
 
@@ -218,7 +218,74 @@ impl Processor {
                 let associated_token_program_ai = next_account_info(accounts_iter)?;
 
                 // VALIDATE ACCOUNTS
-                
+                // signer/writable
+                check_signer(caller_ai)?;
+                check_writable(subscription_ai)?;
+                check_writable(deposit_vault_ai)?;
+                check_writable(payee_vault_ai)?;
+                check_writable(caller_vault_ai)?;
+                check_writable(new_mint_ai)?;
+                check_writable(payer_new_vault_ai)?;
+
+                // PDAs
+                let subscription = match Subscription::try_from_slice(&subscription_ai.try_borrow_data()?) {
+                    Ok(sub) => sub,
+                    Err(_) => {
+                        msg!("Subscription being renewed for first time, i.e. no mint");
+                        Subscription::try_from_slice(&subscription_ai.try_borrow_data()?[0..subscription_ai.data_len()-32])?
+                    }
+                };
+
+                let payee = subscription.payee;
+                let amount = subscription.amount;
+                let duration = subscription.duration;
+                let subscription_seeds = &[
+                    b"subscription_metadata",
+                    payee.as_ref(),
+                    &amount.to_le_bytes(),
+                    &duration.to_le_bytes(),
+                    &count.to_le_bytes(),
+                ];
+                check_pda(subscription_ai, subscription_seeds, program_id)?;
+
+                check_ata(deposit_vault_ai, subscription_ai.key, &subscription.deposit_mint)?;
+                check_initialized_ata(deposit_vault_ai, subscription_ai.key, &subscription.deposit_mint)?;
+
+                check_ata(payee_vault_ai, &payee, &subscription.deposit_mint)?;
+                // check_initialized_ata(payee_vault_ai, &payee, &subscription.deposit_mint)?;
+
+                check_ata(caller_vault_ai, caller_ai.key, &subscription.deposit_mint)?;
+                // check_initialized_ata(caller_vault_ai, &payee, &subscription.deposit_mint)?;
+
+                let new_mint_seeds = &[
+                    b"subscription_mint",
+                    subscription_ai.key.as_ref(),
+                    &subscription.renewal_count.to_le_bytes(),
+                ];
+                check_pda(new_mint_ai, new_mint_seeds, program_id)?;
+                let (_, new_mint_bump) = Pubkey::find_program_address(new_mint_seeds, program_id);
+                let new_mint_seeds = &[
+                    b"subscription_mint",
+                    subscription_ai.key.as_ref(),
+                    &subscription.renewal_count.to_le_bytes(),
+                    &[new_mint_bump],
+                ];
+
+                check_ata(payer_new_vault_ai, &payer, new_mint_ai.key)?;
+
+                if let Some(current_mint) = subscription.mint {
+                    check_ata(payer_old_vault_ai, &payer, &current_mint)?;
+                    check_initialized_ata(payer_old_vault_ai, &payer, &current_mint)?;
+                }
+
+                // programs
+                check_program_id(system_program_ai, &system_program::id())?;
+                check_program_id(sysvar_rent_ai, &rent::id())?;
+                check_program_id(token_program_ai, &spl_token::id())?;
+                check_program_id(
+                    associated_token_program_ai,
+                    &spl_associated_token_account::id(),
+                )?;
 
                 // LOGIC
 

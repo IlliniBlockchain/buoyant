@@ -76,7 +76,10 @@ pub enum SubscriptionInstruction {
     ///   10. `[]` token program
     ///   11. `[]` associated token program
     ///
-    Renew {},
+    Renew {
+        count: u64,
+        payer: Pubkey,
+    },
 
     /// Withdraws rent from subscription metadata. Can only be called by account that
     /// initialized the subscription.

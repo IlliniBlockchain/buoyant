@@ -4,7 +4,7 @@ use solana_program::{
     program_pack::Pack, pubkey::Pubkey,
 };
 use spl_associated_token_account::*;
-use spl_token::{error::TokenError, state::Account as TokenAccount, *};
+use spl_token::{error::TokenError, state::Account as TokenAccount};
 use thiserror::Error;
 
 pub fn assert_msg(statement: bool, err: ProgramError, msg: &str) -> ProgramResult {
@@ -35,7 +35,7 @@ pub fn check_writable(account: &AccountInfo) -> ProgramResult {
 }
 
 pub fn check_pda(account: &AccountInfo, seeds: &[&[u8]], program_id: &Pubkey) -> ProgramResult {
-    let (pda, bump) = Pubkey::find_program_address(seeds, program_id);
+    let (pda, _) = Pubkey::find_program_address(seeds, program_id);
     if *account.key != pda {
         msg!("Invalid PDA:\tExpected: {}\tGot: {}", &pda, account.key);
         Err(UtilsError::InvalidProgramAddress.into())

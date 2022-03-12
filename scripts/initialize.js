@@ -16,7 +16,7 @@ const {
 const BN = require("bn.js");
 
 const { mintAuthority, user, mintKey } = require("./utils/keys.js");
-const programId = new PublicKey("FdmChujE5rEhsvmTUvz1gbfoU3bKSWi52YuSqghNaDhj");
+const programId = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
 const connection = new Connection("https://api.devnet.solana.com/");
 
 const initializeInstruction = (
@@ -148,46 +148,6 @@ const main = async () => {
   );
 
   console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
-
-  // run it again to make sure increments counter
-  let accounts = await findAccounts(
-    user.publicKey,
-    payee,
-    amount,
-    duration,
-    mintKey
-  );
-  let counterKey2 = accounts.counterKey;
-  let subKey2 = accounts.subKey;
-  let depositVault2 = accounts.depositVault;
-
-  const initIx2 = initializeInstruction(
-    user.publicKey,
-    counterKey2,
-    subKey2,
-    depositVault2,
-    mintKey,
-    payee,
-    amount,
-    duration,
-  );
-
-  const tx2 = new Transaction();
-  tx2.add(initIx2);
-
-  const txid2 = await sendAndConfirmTransaction(
-    connection,
-    tx2,
-    [ user ],
-    {
-      skipPreflight: true,
-      preflightCommitment: "confirmed",
-      confirmation: "confirmed",
-    }
-  );
-
-  console.log(`https://explorer.solana.com/tx/${txid2}?cluster=devnet`);
-
 }
 
 main()
