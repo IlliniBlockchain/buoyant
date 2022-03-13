@@ -6,6 +6,12 @@ use thiserror::Error;
 pub enum SubscriptionError {
     #[error("Error is sample.")]
     SampleError,
+    #[error("Too early for renewal.")]
+    EarlyRenew,
+    #[error("Receiver of renewed token is not owner of subscription.")]
+    InvalidReceiver,
+    #[error("Already expired.")]
+    AlreadyExpired,
 }
 
 impl From<SubscriptionError> for ProgramError {

@@ -15,32 +15,38 @@ const {
 } = require("@solana/spl-token");
 const BN = require("bn.js");
 
-const { findTokenHolder } = require('./utils/findTokenHolder');
+const { findTokenHolder } = require("./utils/findTokenHolder");
 
-const { mintAuthority, user, mintKey } = require("./utils/keys.js");
-const programId = new PublicKey("FdmChujE5rEhsvmTUvz1gbfoU3bKSWi52YuSqghNaDhj");
+const { user, mintKey } = require("./utils/keys.js");
+const programId = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
 const connection = new Connection("https://api.devnet.solana.com/");
 
 const renewInstruction = (
   callerKey,
   subKey,
+  depositMint,
   depositVault,
+  payeeKey,
   payeeVault,
   callerVault,
   newMint,
   payerNewVault,
   payerOldVault,
-  count
+  count,
+  payer
 ) => {
   const accounts = [
     { pubkey: callerKey, isSigner: true, isWritable: true },
     { pubkey: subKey, isSigner: false, isWritable: true },
+    { pubkey: depositMint, isSigner: false, isWritable: false },
     { pubkey: depositVault, isSigner: false, isWritable: true },
+    { pubkey: payeeKey, isSigner: false, isWritable: false },
     { pubkey: payeeVault, isSigner: false, isWritable: true },
     { pubkey: callerVault, isSigner: false, isWritable: true },
     { pubkey: newMint, isSigner: false, isWritable: true },
     { pubkey: payerNewVault, isSigner: false, isWritable: true },
     { pubkey: payerOldVault, isSigner: false, isWritable: false },
+    { pubkey: payer, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
     { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
     { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
@@ -48,10 +54,10 @@ const renewInstruction = (
   ];
 
   const idxBuffer = Buffer.from(new Uint8Array([3]));
-  // const countBuffer = Buffer.from(
-  //   new Uint8Array(new BN(count).toArray("le", 8))
-  // );
-  const inputData = Buffer.concat([idxBuffer]);
+  const countBuffer = Buffer.from(
+    new Uint8Array(new BN(count).toArray("le", 8))
+  );
+  const inputData = Buffer.concat([idxBuffer, countBuffer]);
 
   const instruction = new TransactionInstruction({
     keys: accounts,
@@ -69,17 +75,16 @@ const findRenewAccounts = async (
   amount,
   duration,
   count,
-  payer = null,
+  payer = null
 ) => {
-
   // subKey
-  const [ subKey, subBump ] = await PublicKey.findProgramAddress(
+  const [subKey, subBump] = await PublicKey.findProgramAddress(
     [
       Buffer.from("subscription_metadata"),
       payeeKey.toBuffer(),
-      Buffer.from(new Uint8Array((new BN(amount)).toArray("le", 8))),
-      Buffer.from(new Uint8Array((new BN(duration)).toArray("le", 8))),
-      Buffer.from(new Uint8Array((new BN(count)).toArray("le", 8)))
+      Buffer.from(new Uint8Array(new BN(amount).toArray("le", 8))),
+      Buffer.from(new Uint8Array(new BN(duration).toArray("le", 8))),
+      Buffer.from(new Uint8Array(new BN(count).toArray("le", 8))),
     ],
     programId
   );
@@ -90,7 +95,7 @@ const findRenewAccounts = async (
     TOKEN_PROGRAM_ID,
     mintKey,
     subKey,
-    true,
+    true
   );
 
   // payeeVault
@@ -99,7 +104,7 @@ const findRenewAccounts = async (
     TOKEN_PROGRAM_ID,
     mintKey,
     payeeKey,
-    true,
+    true
   );
 
   // callerVault
@@ -108,14 +113,19 @@ const findRenewAccounts = async (
     TOKEN_PROGRAM_ID,
     mintKey,
     callerKey,
-    true,
+    true
   );
 
   // newMint...need to define scheme
-  const subAccount = (await connection.getAccountInfo(subKey));
-  const mintCount = new BN(subAccount.data.slice(subAccount.data.length - 8));
+  const subAccount = await connection.getAccountInfo(subKey);
+  const initialized = subAccount.data[1] === 1;
 
-  const [ newMint, newMintBump ] = await PublicKey.findProgramAddress(
+  const mintCount = initialized
+    ? new BN(subAccount.data.slice(154, 162), (endian = "le"))
+    : new BN(0);
+  console.log("renewal/mint count:", mintCount);
+
+  const [newMint, newMintBump] = await PublicKey.findProgramAddress(
     [
       Buffer.from("subscription_mint"),
       subKey.toBuffer(),
@@ -125,18 +135,40 @@ const findRenewAccounts = async (
   );
 
   // get data from subKey account
-  const initialized = subAccount.data[1] === 1;
   let payerNewVault;
   let payerOldVault;
-  if (payer !== null) {
 
+  if (initialized) {
+    // get mint and all that
+    const currentMint = new PublicKey(subAccount.data.slice(2, 34));
+    // need trace the token owner
+    payer = await findTokenHolder(currentMint);
+    console.log("currentMint:", currentMint.toBase58());
+    console.log("payer:", payer.toBase58());
+
+    payerNewVault = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      newMint,
+      payer,
+      true
+    );
+
+    payerOldVault = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      currentMint,
+      payer,
+      true
+    );
+  } else if (payer !== null) {
     // payerNewVault
     payerNewVault = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       newMint,
       payer,
-      true,
+      true
     );
 
     // payerOldVault
@@ -148,35 +180,11 @@ const findRenewAccounts = async (
         TOKEN_PROGRAM_ID,
         currentMint,
         payer,
-        true,
+        true
       );
     }
-
-  } else if (initialized) {
-
-    // get mint and all that
-    const currentMint = new PublicKey(subAccount.data.slice(2, 34));
-    // need to use explorer or smth to trace the token owner
-    const payer = await findTokenHolder(currentMint);
-
-    payerNewVault = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      newMint,
-      payer,
-      true,
-    );
-
-    payerOldVault = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      currentMint,
-      payer,
-      true,
-    );
-
   } else {
-    throw 'Not initialized and no payer provided';
+    throw "Not initialized and no payer provided";
   }
 
   return {
@@ -187,6 +195,7 @@ const findRenewAccounts = async (
     newMint,
     payerNewVault,
     payerOldVault,
+    payer,
   };
 };
 
@@ -197,7 +206,8 @@ const main = async () => {
   const duration = parseInt(args[2]);
   const count = parseInt(args[3]);
 
-  const payer = new Keypair().publicKey;
+  // const payerTemp = user.publicKey;
+  const payerTemp = new Keypair().publicKey;
   const caller = user;
   const {
     subKey,
@@ -207,6 +217,7 @@ const main = async () => {
     newMint,
     payerNewVault,
     payerOldVault,
+    payer,
   } = await findRenewAccounts(
     caller.publicKey,
     mintKey,
@@ -214,19 +225,22 @@ const main = async () => {
     amount,
     duration,
     count,
-    // payer
+    payerTemp
   );
 
   const renewIx = renewInstruction(
     caller.publicKey,
     subKey,
+    mintKey,
     depositVault,
+    payee,
     payeeVault,
     callerVault,
     newMint,
     payerNewVault,
     payerOldVault,
-    // count,
+    count,
+    payer
   );
 
   const tx = new Transaction();

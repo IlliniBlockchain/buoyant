@@ -65,18 +65,21 @@ pub enum SubscriptionInstruction {
     ///
     ///   0. `[writable, signer]` caller
     ///   1. `[writable]` (PDA) subscription metadata
+    ///   1.5`[]` deposit mint - for ata creation
     ///   2. `[writable]` (PDA) deposit vault
+    ///   2.5`[]` payee - for ata creation
     ///   3. `[writable]` (PDA) payee vault
     ///   4. `[writable]` (PDA) caller vault
     ///   5. `[writable]` (PDA) new token mint
     ///   6. `[writable]` (PDA) payer new token vault
     ///   7. `[]` (PDA) payer old token vault
-    ///   8. `[]` system program
-    ///   9. `[]` sysvar rent program
-    ///   10. `[]` token program
-    ///   11. `[]` associated token program
+    ///   8. `[]` payer - for ata creation
+    ///   9. `[]` system program
+    ///   10. `[]` sysvar rent program
+    ///   11. `[]` token program
+    ///   12. `[]` associated token program
     ///
-    Renew {},
+    Renew { count: u64 },
 
     /// Withdraws rent from subscription metadata. Can only be called by account that
     /// initialized the subscription.
