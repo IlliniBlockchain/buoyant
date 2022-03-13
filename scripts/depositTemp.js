@@ -15,10 +15,7 @@ const {
 } = require("@solana/spl-token");
 const BN = require("bn.js");
 
-const { findTokenHolder } = require("./utils/findTokenHolder");
-
 const {
-  mintAuthority,
   user,
   mintKey,
   userTokenAccount,

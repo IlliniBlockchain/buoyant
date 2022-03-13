@@ -1,8 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::{
-    // clock::UnixTimestamp,
-    pubkey::Pubkey,
-};
+use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub struct Subscription {
@@ -22,5 +19,5 @@ pub struct Subscription {
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub struct Counter {
-    pub count: u64
+    pub count: u64,
 }

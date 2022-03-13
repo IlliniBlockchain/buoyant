@@ -267,7 +267,8 @@ impl Processor {
                 ];
                 check_pda(subscription_ai, subscription_seeds, program_id)?;
 
-                let (_, subscription_bump) = Pubkey::find_program_address(subscription_seeds, program_id);
+                let (_, subscription_bump) =
+                    Pubkey::find_program_address(subscription_seeds, program_id);
                 let subscription_seeds = &[
                     b"subscription_metadata",
                     payee.as_ref(),
@@ -279,7 +280,7 @@ impl Processor {
 
                 // deposit mint
                 if *deposit_mint_ai.key != subscription.deposit_mint {
-                    return Err(TokenError::MintMismatch.into())
+                    return Err(TokenError::MintMismatch.into());
                 }
 
                 check_ata(
@@ -346,7 +347,7 @@ impl Processor {
                 if deposit_vault.amount < amount {
                     if subscription.active == false {
                         msg!("Already deactivated, insufficient funds to renew.");
-                        return Err(SubscriptionError::AlreadyExpired.into())
+                        return Err(SubscriptionError::AlreadyExpired.into());
                     }
                     subscription.active = false;
                     subscription.serialize(&mut *subscription_ai.try_borrow_mut_data()?)?;
@@ -531,7 +532,6 @@ impl Processor {
                 subscription.next_renew_time = now + duration;
                 subscription.renewal_count += 1;
                 subscription.serialize(&mut *subscription_ai.try_borrow_mut_data()?)?;
-
             }
             SubscriptionInstruction::Close {} => {
                 msg!("Instruction: Close");

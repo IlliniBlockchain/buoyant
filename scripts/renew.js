@@ -15,9 +15,9 @@ const {
 } = require("@solana/spl-token");
 const BN = require("bn.js");
 
-const { findTokenHolder } = require('./utils/findTokenHolder');
+const { findTokenHolder } = require("./utils/findTokenHolder");
 
-const { mintAuthority, user, mintKey } = require("./utils/keys.js");
+const { user, mintKey } = require("./utils/keys.js");
 const programId = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
 const connection = new Connection("https://api.devnet.solana.com/");
 
@@ -57,7 +57,6 @@ const renewInstruction = (
   const countBuffer = Buffer.from(
     new Uint8Array(new BN(count).toArray("le", 8))
   );
-  // const payerBuffer = payer.toBuffer();
   const inputData = Buffer.concat([idxBuffer, countBuffer]);
 
   const instruction = new TransactionInstruction({
@@ -76,17 +75,16 @@ const findRenewAccounts = async (
   amount,
   duration,
   count,
-  payer = null,
+  payer = null
 ) => {
-
   // subKey
-  const [ subKey, subBump ] = await PublicKey.findProgramAddress(
+  const [subKey, subBump] = await PublicKey.findProgramAddress(
     [
       Buffer.from("subscription_metadata"),
       payeeKey.toBuffer(),
-      Buffer.from(new Uint8Array((new BN(amount)).toArray("le", 8))),
-      Buffer.from(new Uint8Array((new BN(duration)).toArray("le", 8))),
-      Buffer.from(new Uint8Array((new BN(count)).toArray("le", 8)))
+      Buffer.from(new Uint8Array(new BN(amount).toArray("le", 8))),
+      Buffer.from(new Uint8Array(new BN(duration).toArray("le", 8))),
+      Buffer.from(new Uint8Array(new BN(count).toArray("le", 8))),
     ],
     programId
   );
@@ -97,7 +95,7 @@ const findRenewAccounts = async (
     TOKEN_PROGRAM_ID,
     mintKey,
     subKey,
-    true,
+    true
   );
 
   // payeeVault
@@ -106,7 +104,7 @@ const findRenewAccounts = async (
     TOKEN_PROGRAM_ID,
     mintKey,
     payeeKey,
-    true,
+    true
   );
 
   // callerVault
@@ -115,17 +113,19 @@ const findRenewAccounts = async (
     TOKEN_PROGRAM_ID,
     mintKey,
     callerKey,
-    true,
+    true
   );
 
   // newMint...need to define scheme
-  const subAccount = (await connection.getAccountInfo(subKey));
-  // console.log(subAccount.data.length);
-  // subAccount.data.forEach((val, idx) => console.log(idx, val));
-  const mintCount = new BN(subAccount.data.slice(154, 162), endian = "le");
+  const subAccount = await connection.getAccountInfo(subKey);
+  const initialized = subAccount.data[1] === 1;
+
+  const mintCount = initialized
+    ? new BN(subAccount.data.slice(154, 162), (endian = "le"))
+    : new BN(0);
   console.log("renewal/mint count:", mintCount);
 
-  const [ newMint, newMintBump ] = await PublicKey.findProgramAddress(
+  const [newMint, newMintBump] = await PublicKey.findProgramAddress(
     [
       Buffer.from("subscription_mint"),
       subKey.toBuffer(),
@@ -135,15 +135,13 @@ const findRenewAccounts = async (
   );
 
   // get data from subKey account
-  const initialized = subAccount.data[1] === 1;
   let payerNewVault;
   let payerOldVault;
 
   if (initialized) {
-
     // get mint and all that
     const currentMint = new PublicKey(subAccount.data.slice(2, 34));
-    // need to use explorer or smth to trace the token owner
+    // need trace the token owner
     payer = await findTokenHolder(currentMint);
     console.log("currentMint:", currentMint.toBase58());
     console.log("payer:", payer.toBase58());
@@ -153,7 +151,7 @@ const findRenewAccounts = async (
       TOKEN_PROGRAM_ID,
       newMint,
       payer,
-      true,
+      true
     );
 
     payerOldVault = await Token.getAssociatedTokenAddress(
@@ -161,18 +159,16 @@ const findRenewAccounts = async (
       TOKEN_PROGRAM_ID,
       currentMint,
       payer,
-      true,
+      true
     );
-
   } else if (payer !== null) {
-
     // payerNewVault
     payerNewVault = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       newMint,
       payer,
-      true,
+      true
     );
 
     // payerOldVault
@@ -184,12 +180,11 @@ const findRenewAccounts = async (
         TOKEN_PROGRAM_ID,
         currentMint,
         payer,
-        true,
+        true
       );
     }
-
   } else {
-    throw 'Not initialized and no payer provided';
+    throw "Not initialized and no payer provided";
   }
 
   return {
@@ -200,18 +195,18 @@ const findRenewAccounts = async (
     newMint,
     payerNewVault,
     payerOldVault,
-    payer
+    payer,
   };
 };
 
 const main = async () => {
-  
   let args = process.argv.slice(2);
   const payee = new PublicKey(args[0]);
   const amount = parseInt(args[1]);
   const duration = parseInt(args[2]);
   const count = parseInt(args[3]);
 
+  // const payerTemp = user.publicKey;
   const payerTemp = new Keypair().publicKey;
   const caller = user;
   const {
@@ -222,7 +217,7 @@ const main = async () => {
     newMint,
     payerNewVault,
     payerOldVault,
-    payer
+    payer,
   } = await findRenewAccounts(
     caller.publicKey,
     mintKey,
@@ -245,7 +240,7 @@ const main = async () => {
     payerNewVault,
     payerOldVault,
     count,
-    payer,
+    payer
   );
 
   const tx = new Transaction();
