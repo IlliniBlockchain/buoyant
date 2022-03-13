@@ -11,6 +11,9 @@
 
 const { Keypair, Connection, PublicKey } = require("@solana/web3.js");
 const { type, any, Infer, string, create, optional, array, enums, coerce, instance, union, number } = require("superstruct");
+const {
+  Token,
+} = require("@solana/spl-token");
 
 const PublicKeyFromString = coerce(
   instance(PublicKey),
@@ -87,11 +90,22 @@ function getTransfer(
       const { type: rawType } = instruction.parsed;
       const type = create(rawType, TokenInstructionType);
 
+      // console.log("Instruction:", instruction);
       if (type === "transferChecked") {
-        return create(instruction.parsed.info, TransferChecked);
+        // return create(instruction.parsed.info, TransferChecked);
+        // get mint from source
+        // const tokenAccount = await Token.getAccountInfo(instruction.parsed.info.source);
+        // instruction.parsed.info.mint = tokenAccount.mint;
+        return instruction.parsed.info;
       } else if (type === "transfer") {
-        console.log(instruction.parsed.info); // CHECKPOINT
-        return create(instruction.parsed.info, Transfer);
+        // return create(instruction.parsed.info, Transfer);
+        // get mint from source
+        // const tokenAccount = await Token.getAccountInfo(instruction.parsed.info.source);
+        // console.log(tokenAccount);
+        // instruction.parsed.info.mint = tokenAccount.mint;
+        return instruction.parsed.info;
+      } else if (type === "mintTo") {
+        return instruction.parsed.info;
       }
     } catch (error) {
     }
@@ -102,6 +116,12 @@ function getTransfer(
 async function findTokenHolder(pubkey) {
   // const pubkey = new PublicKey("knonR4RcJ69UiSKZYBBonsvnciV4ZVKQ3dhmog6SzVw")
   const connection = new Connection("https://api.devnet.solana.com/");
+
+  const largestAccounts = (await connection.getTokenLargestAccounts(pubkey)).value;
+  // console.log(largestAccounts[0]);
+  const accountInfo = await connection.getParsedAccountInfo(largestAccounts[0].address);
+  // console.log(accountInfo);
+  return new PublicKey(accountInfo.value.data.parsed.info.owner);
 
   const options = { limit: 1 };
   const MAX_TRANSACTION_BATCH_SIZE = 10
@@ -137,6 +157,7 @@ async function findTokenHolder(pubkey) {
     );
   }
 
+  let destination = null;
   // console.log(transactionMap);
   transactionMap.forEach((value, key) => {
     const instructions = value.transaction.message.instructions;
@@ -147,19 +168,24 @@ async function findTokenHolder(pubkey) {
     instructions.forEach((instr) => {
       const transfer = getTransfer(instr);
       // console.log(transfer);
-      if (transfer) {
+      if (transfer && transfer.mint == pubkey) {
+        console.log(transfer);
         // console.log(transfer.destination.toBase58());
-        return (transfer.destination)
+        // return (transfer.destination)
+        if (destination === null) destination = transfer.destination;
       }
     })
+
     console.log("innerInstructions:")
     innerInstructions.forEach((instr) => {
       // console.log(instr.instructions);
       instr.instructions.forEach((innerInstr) => {
         const transfer = getTransfer(innerInstr);
-        if (transfer) {
+        if (transfer && transfer.mint == pubkey) {
+          console.log(transfer);
           // console.log(transfer.destination.toBase58());
-          return (transfer.destination)
+          // return (transfer.destination)
+          if (destination === null) destination = transfer.destination;
         }
       })
       // const transfer = getTransfer(instr);
@@ -182,6 +208,7 @@ async function findTokenHolder(pubkey) {
   //     });
   //   }
   // );
+  return destination;
 
 }
 
