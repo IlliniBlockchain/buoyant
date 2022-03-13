@@ -1,4 +1,8 @@
 program/target
 scripts/node_modules
+<<<<<<< HEAD
 
 .DS_Store
+=======
+scripts/dist
+>>>>>>> master

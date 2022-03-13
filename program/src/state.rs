@@ -1,17 +1,23 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::{
-    clock::{Clock, UnixTimestamp},
-    pubkey::Pubkey,
-};
-use std::mem::size_of;
+use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub struct Subscription {
-    mint: Option<Pubkey>,
-    payee: Pubkey,
-    deposit_vault: Pubkey,
-    deposit_mint: Pubkey,
-    amount: u64,
-    duration: UnixTimestamp, // = i64, although will always be positive
-    next_renew_time: UnixTimestamp,
+    pub active: bool,
+
+    pub mint: Option<Pubkey>,
+    pub deposit_vault: Pubkey,
+    pub deposit_mint: Pubkey,
+
+    pub payee: Pubkey,
+    pub amount: u64,
+    pub duration: i64, // = UnixTimestamp, although will always be positive
+
+    pub next_renew_time: i64,
+    pub renewal_count: u64,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+pub struct Counter {
+    pub count: u64,
 }
