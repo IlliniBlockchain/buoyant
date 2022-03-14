@@ -1,0 +1,369 @@
+:root {
+    --font-main: DM Sans, Inter, -apple-system, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --font-logo: DM Sans;
+}
+body {
+    margin: 0;
+    padding: 0;
+    background-color: rgb(4, 113, 166);
+    /* background-color: rgb(88, 209, 251); */
+    /* background-image: linear-gradient(rgb(4, 113, 166), rgb(0, 30, 44)); */
+    /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; */
+    font-family: var(--font-main);
+    /* font-family: Roboto Mono; */
+    line-height: 1.5;
+    color: white;
+
+}
+
+body * {
+    box-sizing: border-box;
+}
+
+.wrapper {
+    overflow-x: hidden;
+}
+
+h2 {
+    font-size: 5em;
+    margin-bottom: 25px;
+}
+
+h3 {
+    font-size: 2.5em;
+    margin-top: 25px;
+    margin-bottom: 25px;
+    opacity: 0.75;
+    /* color: #ccd; */
+}
+
+button {
+    transition: .5s ease;
+    position: relative;
+    top: 0;
+
+    width: fit-content;
+    height: 50px;
+    padding: 0 15px;
+    margin-left: 50px;
+    border-radius: 10px;
+    color: white;
+    font-family: var(--font-main);
+    font-size: 1.3em;
+    font-weight: bold;
+    transition: 0.1s;
+}
+button:hover {
+    cursor: pointer;
+    top: -3px;
+}
+
+.nav {
+    height: 100px;
+    padding-bottom: 10px;
+    background-image: linear-gradient(rgb(88, 209, 251), rgba(0, 0, 0, 0));
+    display: flex;
+    justify-content: space-between;
+}
+
+.nav div {
+    width: 350px;
+}
+
+.left-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.home-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+}
+
+.logo-text {
+    margin: 0;
+    margin-left: 15px;
+    padding: 15px 0;
+    vertical-align: middle;
+    font-family: var(--font-logo);
+    
+    font-weight: lighter;
+    /* text-transform: uppercase; */
+    /* letter-spacing: 5px; */
+}
+
+.middle-nav {
+    margin: auto;
+    width: 400px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.3em;
+}
+
+.middle-nav a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    transition: 0.1s;
+}
+
+.middle-nav a:hover {
+    opacity: 0.5;
+}
+
+.right-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.app-btn {
+    border: 1px solid rgb(0, 59, 88);
+    background-color: rgb(4, 113, 166);
+}
+
+.app-btn:hover {
+    background-color: rgb(0, 59, 88);
+}
+
+.center {
+    max-width: 90%;
+    width: 1080px;
+    min-height: 650px;
+    margin: auto;
+    margin-top: 35px;
+    margin-bottom: 175px;
+    text-align: center;
+    position: relative;
+}
+
+.left-img {
+    /* float: left; */
+    left: 0;
+}
+
+.right-img {
+    /* float: right; */
+    right: 0;
+    top: -50px;
+}
+
+.middle-img {
+    margin: auto;
+    left: 50%;
+    top: -50px;
+    transform: translate(-50%, 0%);
+}
+
+.right-text {
+    width: 70%;
+    text-align: right;
+    float: right;
+}
+.middle-text {
+    /* text-align: center;*/
+    width: 100%;
+    margin: auto;
+}
+
+.left-text {
+    width: 70%;
+    text-align: left;
+    left: 0;
+}
+
+.bg-fish {
+    opacity: 0.5;
+    position: absolute;
+    height: 650px;
+    width: auto;
+    z-index: -1;
+}
+
+.build-btn {
+    border: 1px solid rgb(0, 30, 44);
+    background-color: rgb(0, 59, 88);
+}
+
+.build-btn:hover {
+    background-color: rgb(0, 30, 44);
+}
+
+.banner {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: linear-gradient(330deg, rgb(88, 209, 251), rgba(0, 0, 0, 0));
+}
+
+.three-blocks {
+    margin-top: 50px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.block {
+    background-image: linear-gradient(180deg, rgba(0, 15, 22, 0.8), rgba(0, 15, 22, 0.4));
+    width: 32%;
+    padding: 50px 30px;
+    border-radius: 20px;
+}
+
+.block h3 {
+    font-size: 1.7em;
+}
+
+.block img {
+    width: auto;
+    height: 80px;
+}
+
+.block p {
+    font-size: 1.25em;
+}
+
+.contact-box {
+    max-width: 1080px;
+    border-radius: 20px;
+    height: fit-content;
+    padding: 75px 100px;
+    margin: auto;
+    margin-bottom: 150px;
+    text-align: center;
+    background-image: linear-gradient(180deg, rgba(0, 15, 22, 0.6), rgba(0, 15, 22, 0.2));
+}
+
+.h3-link {
+    color: white;
+    text-decoration: none;
+    opacity: 0.7;
+    transition: 0.1s;
+}
+.h3-link:hover {
+    opacity: 1;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 300px;
+    background-color: rgb(0, 15, 22);
+    padding: 50px 20%;
+}
+
+.footer-left {
+    width: 500px;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+}
+
+.footer-contact {
+    opacity: 0.5;
+}
+
+.footer-header {
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+/* basically copy middle-nav */
+.footer-links {
+    width: fit-content;
+    height: 150px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    font-size: 1.2em;
+}
+
+.footer-links a {
+    text-decoration: none;
+    color: white;
+    font-weight: normal;
+    transition: 0.1s;
+}
+
+.footer-links a:hover {
+    opacity: 0.5;
+}
+
+@media only screen and (max-width: 800px) {
+
+    h2 {
+        font-size: 3.4em;
+    }
+    h3 {
+        font-size: 2em;
+    }
+
+    .home-link {
+        margin: auto;
+    }
+    .middle-nav, .right-nav {
+        display: none;
+    }
+
+    .center {
+        max-width: 95%;
+    }
+    .right-text, .left-text {
+        width: 100%;
+        padding: 0 15px;
+    }
+    .left-img {
+        left: -35%;
+    }
+
+    .three-blocks {
+        flex-direction: column;
+        align-items: center;
+        padding: 0 15px;
+    }
+    .block {
+        width: 100%;
+        margin-bottom: 25px;
+    }
+
+    .contact-box {
+        width: 85%;
+        padding: 50px 15px;
+    }
+
+    .footer {
+        flex-direction: column;
+        align-items: center;
+    }
+    .footer-logo {
+        justify-content: center;
+    }
+    .footer-contact {
+        text-align: center;
+    }
+    .footer-header {
+        display: none;
+    }
+    .footer-links {
+        width: 300px;
+        height: fit-content;
+        margin-top: 50px;
+        margin-bottom: 50px;
+        flex-direction: row;
+        justify-content: space-around;
+    }
+}
