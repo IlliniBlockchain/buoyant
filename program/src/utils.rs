@@ -42,6 +42,7 @@ pub fn check_pda(account: &AccountInfo, seeds: &[&[u8]], program_id: &Pubkey) ->
     )
 }
 
+/// Validate that given acount is indeed the associated token address of user (and mint) address
 pub fn check_ata(
     account: &AccountInfo,
     user_address: &Pubkey,

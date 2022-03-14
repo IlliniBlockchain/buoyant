@@ -1,8 +1,5 @@
 program/target
 scripts/node_modules
-<<<<<<< HEAD
+scripts/dist
 
 .DS_Store
-=======
-scripts/dist
->>>>>>> master

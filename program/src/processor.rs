@@ -207,10 +207,11 @@ impl Processor {
                 msg!("Instruction: Deposit");
                 msg!("amount: {}", amount);
             }
-            SubscriptionInstruction::Withdraw { amount } => {
+            SubscriptionInstruction::Withdraw { amount, count } => {
                 msg!("Instruction: Withdraw");
                 msg!("amount: {}", amount);
-                withdraw::process(program_id, accounts, amount)?;
+                msg!("count: {}", count);
+                withdraw::process_withdraw(program_id, accounts, amount, count)?;
             }
             SubscriptionInstruction::Renew { count } => {
                 msg!("Instruction: Renew");

@@ -14,6 +14,8 @@ pub enum SubscriptionError {
     AlreadyExpired,
     #[error("Invalid vault owner.")]
     InvalidVaultOwner,
+    #[error("Invalid subscription owner.")]
+    InvalidSubscriptionOwner,
     #[error("Account balance insufficient for requested withdraw amount.")]
     InsufficientWithdrawBalance,
 }
