@@ -52,7 +52,11 @@ pub fn check_ata(
     // check pda
     let ata = get_associated_token_address(user_address, mint_address);
     if *account.key != ata {
-        msg!("Invalid ATA address:\tExpected: {}\tGot: {}", &ata, account.key);
+        msg!(
+            "Invalid ATA address:\tExpected: {}\tGot: {}",
+            &ata,
+            account.key
+        );
         Err(UtilsError::InvalidProgramAddress.into())
     } else {
         Ok(())
@@ -73,11 +77,19 @@ pub fn check_initialized_ata(
     // check token owner and mint
     let token_account = TokenAccount::unpack_from_slice(&account.try_borrow_data()?)?;
     if token_account.owner != *user_address {
-        msg!("ATA invalid user owner:\tExpected: {}\tGot: {}", user_address, token_account.owner);
+        msg!(
+            "ATA invalid user owner:\tExpected: {}\tGot: {}",
+            user_address,
+            token_account.owner
+        );
         return Err(TokenError::OwnerMismatch.into());
     }
     if token_account.mint != *mint_address {
-        msg!("ATA invalid mint:\tExpected: {}\tGot: {}", mint_address, token_account.mint);
+        msg!(
+            "ATA invalid mint:\tExpected: {}\tGot: {}",
+            mint_address,
+            token_account.mint
+        );
         return Err(TokenError::MintMismatch.into());
     }
     Ok(())
@@ -85,7 +97,11 @@ pub fn check_initialized_ata(
 
 pub fn check_program_id(account: &AccountInfo, program_id: &Pubkey) -> ProgramResult {
     if *account.key != *program_id {
-        msg!("Invalid program id:\tExpected: {}\tGot: {}", program_id, account.key);
+        msg!(
+            "Invalid program id:\tExpected: {}\tGot: {}",
+            program_id,
+            account.key
+        );
         Err(ProgramError::IncorrectProgramId)
     } else {
         Ok(())
