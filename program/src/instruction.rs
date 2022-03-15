@@ -44,8 +44,8 @@ pub enum SubscriptionInstruction {
     ///
     ///   0. `[writable, signer]` payer
     ///   1. `[writable]` payer token account
+    ///   4. `[writable]` (PDA) payer token vault
     ///   2. `[writable]` (PDA) deposit vault
-    ///   4. `[writable]` (PDA) token mint
     ///   5. `[]` (PDA) subscription metadata
     ///   6. `[]` token program for token transfers
     ///
