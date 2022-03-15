@@ -4,7 +4,7 @@ use {
         instruction::SubscriptionInstruction,
         state::{Subscription},
         utils::{
-            assert_msg, check_ata, check_signer, check_writable,
+            assert_msg, check_ata, check_signer, check_pda, check_writable,
         },
     },
     borsh::{BorshDeserialize},
@@ -27,18 +27,27 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
     let payer_ai = next_account_info(account_info_iter)?;
     let payer_token_account_ai = next_account_info(account_info_iter)?; // SPL token account
     let deposit_vault_ai = next_account_info(account_info_iter)?;
+    let mint_ai = next_account_info(account_info_iter)?;
     let subscription_ai = next_account_info(account_info_iter)?;
     let token_program_ai = next_account_info(account_info_iter)?;
 
     check_signer(payer_ai);
-    [payer_ai, payer_token_account_ai, deposit_vault_ai].iter().map(|x| check_writable(x));
+    [payer_ai, payer_token_account_ai, deposit_vault_ai, mint_ai].iter().map(|x| check_writable(x));
 
     // Deserialize token account
     let deposit_vault = TokenAccount::unpack_from_slice(&deposit_vault_ai.try_borrow_data()?)?;
     let payer_token_account = TokenAccount::unpack_from_slice(&payer_token_account_ai.try_borrow_data()?)?;
+    let mint_account = TokenAccount::unpack_from_slice(&mint_ai.try_borrow_data()?)?;
 
     // Get subscription data
     let subscription = Subscription::try_from_slice(&subscription_ai.try_borrow_data()?)?;
+
+    let mint_seeds = &[
+        b"subscription_mint",
+        subscription_ai.key.as_ref(),
+        &subscription.renewal_count.to_le_bytes(),
+    ];
+    check_pda(mint_ai, mint_seeds, program_id)?;
 
     // Validations
 
@@ -46,6 +55,12 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
         payer_token_account.owner == *payer_ai.key,
         SubscriptionError::InvalidVaultOwner.into(),
         "Invalid vault owner",
+    )?;
+
+    assert_msg(
+        mint_account.owner == payer_token_account.owner,
+        SubscriptionError::InvalidMintOwner.into(),
+        "Invalid mint owner",
     )?;
 
     check_ata(
@@ -62,19 +77,18 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
             SubscriptionError::InvalidSubscriptionOwner.into(),
             "Invalid subscription owner. Only the owner of a subscription associated with the deposit vault can withdraw.",
         )?;
+        assert_msg(
+            deposit_vault.mint == current_mint && deposit_vault.amount > 0,
+            SubscriptionError::InvalidReceiver.into(),
+            "Invalid receiver.",
+        )?;
     }
 
     assert_msg(
-        payer_token_account.amount > (0.3f64 * pow(10u64, 9) as f64) as u64,
+        payer_token_account.amount > 0,
         SubscriptionError::InsufficientWithdrawBalance.into(),
         "Insufficient funds to withdraw.",
     )?;
-
-    // Just ignore request if insufficient fund to withdraw
-    if deposit_vault.amount < amount {
-        msg!("Insufficient funds to withdraw.");
-        return Ok(());
-    }
 
     msg!("Transferring the requested fund to the owner...");
 
