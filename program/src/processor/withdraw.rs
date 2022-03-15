@@ -1,7 +1,6 @@
 use {
     crate::{
         error::SubscriptionError,
-        instruction::SubscriptionInstruction,
         state::{Subscription},
         utils::{
             assert_msg, check_initialized_ata, check_pda, check_signer, check_writable,
