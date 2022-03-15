@@ -24,6 +24,7 @@ use {
     spl_token::{error::TokenError, instruction, state::Account as TokenAccount, state::Mint},
 };
 
+
 // fee paid to renewers are currently fixed to 0.01 * amount
 const FEE: u64 = 1;
 const FEE_DECIMALS: u8 = 2;
