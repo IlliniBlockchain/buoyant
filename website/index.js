@@ -28,8 +28,9 @@ function getScrollPercent(scrollPos) {
 }
 
 function updateBgColor(scrollPos) {
-    const perc = Math.min(Math.max(0.0001, getScrollPercent(scrollPos)), 1); // total scrolled %
+    const perc = Math.min(Math.max(0.05, getScrollPercent(scrollPos)), 1); // total scrolled %
     // new RGB
+    console.log(perc);
     const [r, g, b] = [sr + dr * perc, sg + dg * perc, sb + db * perc].map(Math.round);
     document.body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
 }
