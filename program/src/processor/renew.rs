@@ -14,6 +14,7 @@ use {
         entrypoint::ProgramResult,
         msg,
         program::{invoke, invoke_signed},
+        program_error::ProgramError,
         program_pack::Pack,
         pubkey::Pubkey,
         system_instruction, system_program,
@@ -152,16 +153,101 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
         return Err(SubscriptionError::EarlyRenew.into());
     }
 
-    // checks balance of deposit vault, if not enough, deactivate, return
+    // calculate payments
+    let base: u32 = 10;
+    let caller_amount = (amount as f64 * FEE as f64 / base.pow(FEE_DECIMALS.into()) as f64) as u64;
+    let payee_amount = amount - caller_amount;
+
+    // checks balance of deposit vault, if not enough, deactivate, compensate caller, return
     let deposit_vault = TokenAccount::unpack_from_slice(&deposit_vault_ai.try_borrow_data()?)?;
     if deposit_vault.amount < amount {
         if subscription.active == false {
             msg!("Already deactivated, insufficient funds to renew.");
             return Err(SubscriptionError::AlreadyExpired.into());
         }
-        subscription.active = false;
-        subscription.serialize(&mut *subscription_ai.try_borrow_mut_data()?)?;
         msg!("Insufficient funds: deactivating subscription.");
+
+        msg!("Paying caller for expiry.");
+        let deposit_vault_amount = deposit_vault.amount;
+        if deposit_vault_amount > 0 {
+            msg!("Paying caller tokens from deposit vault...");
+            // init
+            if caller_vault_ai.data_len() == 0 {
+                msg!("Caller does not have associated token account to accept payment, initializing...");
+                invoke(
+                    &spl_associated_token_account::create_associated_token_account(
+                        caller_ai.key,
+                        caller_ai.key,
+                        &subscription.deposit_mint,
+                    ),
+                    &[
+                        caller_ai.clone(),
+                        caller_vault_ai.clone(),
+                        caller_ai.clone(),
+                        deposit_mint_ai.clone(),
+                        system_program_ai.clone(),
+                        token_program_ai.clone(),
+                        sysvar_rent_ai.clone(),
+                        associated_token_program_ai.clone(),
+                    ],
+                )?;
+            } else {
+                check_initialized_ata(caller_vault_ai, caller_ai.key, &subscription.deposit_mint)?;
+            }
+
+            // pay out variable amount
+            let expire_token_amount = std::cmp::min(deposit_vault_amount, caller_amount);
+            // RUNNING INTO UNALIGNED POINTER ERROR HERE!
+            invoke_signed(
+                &spl_token::instruction::transfer(
+                    &spl_token::id(),
+                    deposit_vault_ai.key,
+                    caller_vault_ai.key,
+                    subscription_ai.key,
+                    &[],
+                    expire_token_amount,
+                )?,
+                &[
+                    deposit_vault_ai.clone(),
+                    caller_vault_ai.clone(),
+                    subscription_ai.clone(),
+                ],
+                &[subscription_seeds],
+            )?;
+        }
+
+        // if amount is low, also withdraw rent/close the account
+        if deposit_vault_amount < caller_amount {
+            msg!("Paying caller rent from accounts...");
+            msg!("Closing deposit vault token account...");
+            invoke_signed(
+                &spl_token::instruction::close_account(
+                    token_program_ai.key,
+                    deposit_vault_ai.key,
+                    caller_ai.key,
+                    subscription_ai.key,
+                    &[subscription_ai.key],
+                )?,
+                &[
+                    deposit_vault_ai.clone(),
+                    caller_ai.clone(),
+                    subscription_ai.clone(),
+                    token_program_ai.clone(),
+                ],
+                &[subscription_seeds],
+            )?;
+
+            msg!("Withdrawing rent from subscription account...");
+            let caller_starting_lamports = caller_ai.lamports();
+            **caller_ai.lamports.borrow_mut() = caller_starting_lamports
+                .checked_add(subscription_ai.lamports())
+                .ok_or(TokenError::Overflow)?;
+            **subscription_ai.lamports.borrow_mut() = 0;
+
+            subscription.active = false;
+            subscription.serialize(&mut *subscription_ai.try_borrow_mut_data()?)?;
+        }
+
         return Ok(());
     }
 
@@ -175,27 +261,6 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
     }
 
     // create token accounts for payee and caller if uninitialized
-    if payee_vault_ai.data_len() == 0 {
-        invoke(
-            &spl_associated_token_account::create_associated_token_account(
-                caller_ai.key,
-                payee,
-                &subscription.deposit_mint,
-            ),
-            &[
-                caller_ai.clone(),
-                payee_vault_ai.clone(),
-                payee_ai.clone(),
-                deposit_mint_ai.clone(),
-                system_program_ai.clone(),
-                token_program_ai.clone(),
-                sysvar_rent_ai.clone(),
-                associated_token_program_ai.clone(),
-            ],
-        )?;
-    } else {
-        check_initialized_ata(payee_vault_ai, payee, &subscription.deposit_mint)?;
-    }
     if caller_vault_ai.data_len() == 0 {
         invoke(
             &spl_associated_token_account::create_associated_token_account(
@@ -217,31 +282,30 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
     } else {
         check_initialized_ata(caller_vault_ai, caller_ai.key, &subscription.deposit_mint)?;
     }
+    if payee_vault_ai.data_len() == 0 {
+        invoke(
+            &spl_associated_token_account::create_associated_token_account(
+                caller_ai.key,
+                payee,
+                &subscription.deposit_mint,
+            ),
+            &[
+                caller_ai.clone(),
+                payee_vault_ai.clone(),
+                payee_ai.clone(),
+                deposit_mint_ai.clone(),
+                system_program_ai.clone(),
+                token_program_ai.clone(),
+                sysvar_rent_ai.clone(),
+                associated_token_program_ai.clone(),
+            ],
+        )?;
+    } else {
+        check_initialized_ata(payee_vault_ai, payee, &subscription.deposit_mint)?;
+    }
 
     // transfer to payee, transfer to caller, create mint, mint token
     msg!("Sufficient funds: performing payouts and minting new token.");
-    let base: u32 = 10;
-    let caller_amount = (amount as f64 * FEE as f64 / base.pow(FEE_DECIMALS.into()) as f64) as u64;
-    let payee_amount = amount - caller_amount;
-
-    // transfer to payee
-    msg!("Transferring funds to payee...");
-    invoke_signed(
-        &instruction::transfer(
-            &spl_token::id(),
-            deposit_vault_ai.key,
-            payee_vault_ai.key,
-            subscription_ai.key,
-            &[],
-            payee_amount,
-        )?,
-        &[
-            deposit_vault_ai.clone(),
-            payee_vault_ai.clone(),
-            subscription_ai.clone(),
-        ],
-        &[subscription_seeds],
-    )?;
 
     // transfer to caller
     msg!("Transferring funds to caller...");
@@ -257,6 +321,25 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
         &[
             deposit_vault_ai.clone(),
             caller_vault_ai.clone(),
+            subscription_ai.clone(),
+        ],
+        &[subscription_seeds],
+    )?;
+
+    // transfer to payee
+    msg!("Transferring funds to payee...");
+    invoke_signed(
+        &instruction::transfer(
+            &spl_token::id(),
+            deposit_vault_ai.key,
+            payee_vault_ai.key,
+            subscription_ai.key,
+            &[],
+            payee_amount,
+        )?,
+        &[
+            deposit_vault_ai.clone(),
+            payee_vault_ai.clone(),
             subscription_ai.clone(),
         ],
         &[subscription_seeds],
