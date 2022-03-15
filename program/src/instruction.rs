@@ -49,7 +49,7 @@ pub enum SubscriptionInstruction {
     ///   5. `[]` (PDA) subscription metadata
     ///   6. `[]` token program for token transfers
     ///
-    Withdraw { amount: u64, count: u64 },
+    Withdraw { withdraw_amount: u64, count: u64 },
 
     /// Renews or deactivates a provided subscription.
     ///
