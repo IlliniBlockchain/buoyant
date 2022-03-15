@@ -1,3 +1,5 @@
 program/target
 scripts/node_modules
 scripts/dist
+
+.DS_Store

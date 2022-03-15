@@ -12,6 +12,14 @@ pub enum SubscriptionError {
     InvalidReceiver,
     #[error("Already expired.")]
     AlreadyExpired,
+    #[error("Invalid vault owner.")]
+    InvalidVaultOwner,
+    #[error("Invalid mint owner.")]
+    InvalidMintOwner,
+    #[error("Invalid subscription owner.")]
+    InvalidSubscriptionOwner,
+    #[error("Account balance insufficient for requested withdraw amount.")]
+    InsufficientWithdrawBalance,
 }
 
 impl From<SubscriptionError> for ProgramError {

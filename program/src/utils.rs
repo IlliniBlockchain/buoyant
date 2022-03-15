@@ -1,3 +1,4 @@
+
 use num_derive::FromPrimitive;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
@@ -17,33 +18,31 @@ pub fn assert_msg(statement: bool, err: ProgramError, msg: &str) -> ProgramResul
 }
 
 pub fn check_signer(account: &AccountInfo) -> ProgramResult {
-    if !account.is_signer {
-        msg!("Missing required signature on account: {}", account.key);
-        Err(ProgramError::MissingRequiredSignature)
-    } else {
-        Ok(())
-    }
+    assert_msg(
+        account.is_signer,
+        ProgramError::MissingRequiredSignature,
+        &format!("Missing required signature on account: {}", account.key),
+    )
 }
 
 pub fn check_writable(account: &AccountInfo) -> ProgramResult {
-    if !account.is_writable {
-        msg!("Account should be writable: {}", account.key);
-        Err(ProgramError::MissingRequiredSignature)
-    } else {
-        Ok(())
-    }
+    assert_msg(
+        account.is_writable,
+        ProgramError::MissingRequiredSignature,
+        &format!("Account should be writable: {}", account.key),
+    )
 }
 
 pub fn check_pda(account: &AccountInfo, seeds: &[&[u8]], program_id: &Pubkey) -> ProgramResult {
     let (pda, _) = Pubkey::find_program_address(seeds, program_id);
-    if *account.key != pda {
-        msg!("Invalid PDA:\tExpected: {}\tGot: {}", &pda, account.key);
-        Err(UtilsError::InvalidProgramAddress.into())
-    } else {
-        Ok(())
-    }
+    assert_msg(
+        *account.key == pda,
+        UtilsError::InvalidProgramAddress.into(),
+        &format!("Invalid PDA:\tExpected: {}\tGot: {}", &pda, account.key),
+    )
 }
 
+/// Validate that given acount is indeed the associated token address of user (and mint) address
 pub fn check_ata(
     account: &AccountInfo,
     user_address: &Pubkey,
@@ -51,12 +50,11 @@ pub fn check_ata(
 ) -> ProgramResult {
     // check pda
     let ata = get_associated_token_address(user_address, mint_address);
-    if *account.key != ata {
-        msg!("Invalid ATA address:\tExpected: {}\tGot: {}", &ata, account.key);
-        Err(UtilsError::InvalidProgramAddress.into())
-    } else {
-        Ok(())
-    }
+    assert_msg(
+        *account.key == ata,
+        UtilsError::InvalidProgramAddress.into(),
+        &format!("Invalid ATA address:\tExpected: {}\tGot: {}", &ata, account.key)
+    )
 }
 
 pub fn check_initialized_ata(
@@ -84,12 +82,11 @@ pub fn check_initialized_ata(
 }
 
 pub fn check_program_id(account: &AccountInfo, program_id: &Pubkey) -> ProgramResult {
-    if *account.key != *program_id {
-        msg!("Invalid program id:\tExpected: {}\tGot: {}", program_id, account.key);
-        Err(ProgramError::IncorrectProgramId)
-    } else {
-        Ok(())
-    }
+    assert_msg(
+        *account.key == *program_id,
+        ProgramError::IncorrectProgramId,
+        &format!("Invalid program id:\tExpected: {}\tGot: {}", program_id, account.key)
+    )
 }
 
 #[derive(Error, Debug, Copy, Clone, FromPrimitive, PartialEq)]

@@ -12,13 +12,13 @@ pub enum SubscriptionInstruction {
     ///
     ///   0. `[writable, signer]` user
     ///   1. `[writable]` (PDA) metadata counter
-    ///   1. `[writable]` (PDA) subscription metadata
-    ///   2. `[writable]` (PDA) deposit vault
-    ///   3. `[]` (PDA) deposit vault mint
-    ///   4. `[]` system program
-    ///   5. `[]` sysvar rent
-    ///   6. `[]` token program
-    ///   7. `[]` associated token program
+    ///   2. `[writable]` (PDA) subscription metadata
+    ///   3. `[writable]` (PDA) deposit vault
+    ///   4. `[]` (PDA) deposit vault mint
+    ///   5. `[]` system program
+    ///   6. `[]` sysvar rent
+    ///   7. `[]` token program
+    ///   8. `[]` associated token program
     ///
     Initialize {
         payee: Pubkey,
@@ -37,18 +37,19 @@ pub enum SubscriptionInstruction {
     ///
     Deposit { amount: u64 },
 
-    /// Wrapper on transfer function. Withdraws token from deposit vault
-    /// as long as caller is rightful owner.
+    /// Wrapper on transfer function. Withdraws token from deposit vault as long as the
+    /// the caller is the owner of the subscription associated with that deposit vault.
     ///
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable, signer]` payer
-    ///   1. `[writable]` payer token account
-    ///   2. `[writable]` deposit vault
-    ///   3. `[]` subscription metadata
-    ///   4. `[]` token program for token transfers
+    ///   1. `[writable]` (PDA) payer subscription token account
+    ///   4. `[writable]` (PDA) payer deposit token account
+    ///   2. `[writable]` (PDA) deposit vault
+    ///   5. `[]` (PDA) subscription metadata
+    ///   6. `[]` token program for token transfers
     ///
-    Withdraw { amount: u64 },
+    Withdraw { withdraw_amount: u64, count: u64 },
 
     /// Renews or deactivates a provided subscription.
     ///
