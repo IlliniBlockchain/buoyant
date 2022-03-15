@@ -43,13 +43,13 @@ pub enum SubscriptionInstruction {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable, signer]` payer
-    ///   1. `[writable]` payer token account
-    ///   4. `[writable]` (PDA) payer token vault
+    ///   1. `[writable]` (PDA) payer subscription token account
+    ///   4. `[writable]` (PDA) payer deposit token account
     ///   2. `[writable]` (PDA) deposit vault
     ///   5. `[]` (PDA) subscription metadata
     ///   6. `[]` token program for token transfers
     ///
-    Withdraw { amount: u64, count: u64 },
+    Withdraw { withdraw_amount: u64, count: u64 },
 
     /// Renews or deactivates a provided subscription.
     ///

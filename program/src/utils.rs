@@ -21,7 +21,7 @@ pub fn check_signer(account: &AccountInfo) -> ProgramResult {
     assert_msg(
         account.is_signer,
         ProgramError::MissingRequiredSignature,
-        format!("Missing required signature on account: {}", account.key),
+        &format!("Missing required signature on account: {}", account.key),
     )
 }
 
@@ -29,7 +29,7 @@ pub fn check_writable(account: &AccountInfo) -> ProgramResult {
     assert_msg(
         account.is_writable,
         ProgramError::MissingRequiredSignature,
-        format!("Account should be writable: {}", account.key),
+        &format!("Account should be writable: {}", account.key),
     )
 }
 
@@ -38,7 +38,7 @@ pub fn check_pda(account: &AccountInfo, seeds: &[&[u8]], program_id: &Pubkey) ->
     assert_msg(
         *account.key == pda,
         UtilsError::InvalidProgramAddress.into(),
-        format!("Invalid PDA:\tExpected: {}\tGot: {}", &pda, account.key),
+        &format!("Invalid PDA:\tExpected: {}\tGot: {}", &pda, account.key),
     )
 }
 
@@ -53,7 +53,7 @@ pub fn check_ata(
     assert_msg(
         *account.key == ata,
         UtilsError::InvalidProgramAddress.into(),
-        format!("Invalid ATA address:\tExpected: {}\tGot: {}", &ata, account.key)
+        &format!("Invalid ATA address:\tExpected: {}\tGot: {}", &ata, account.key)
     )
 }
 
@@ -85,7 +85,7 @@ pub fn check_program_id(account: &AccountInfo, program_id: &Pubkey) -> ProgramRe
     assert_msg(
         *account.key == *program_id,
         ProgramError::IncorrectProgramId,
-        format!("Invalid program id:\tExpected: {}\tGot: {}", program_id, account.key)
+        &format!("Invalid program id:\tExpected: {}\tGot: {}", program_id, account.key)
     )
 }
 

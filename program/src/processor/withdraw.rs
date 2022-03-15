@@ -19,7 +19,7 @@ use {
 };
 
 // TODO: store `count` parameter in subscription metadata (struct) and remove the paramter
-pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u64, count: u64) -> ProgramResult {
+pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], withdraw_amount: u64, count: u64) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let payer_ai = next_account_info(account_info_iter)?;
@@ -30,11 +30,12 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
     let token_program_ai = next_account_info(account_info_iter)?;
 
     check_signer(payer_ai);
-    [payer_ai, payer_token_account_ai, payer_vault_ai, deposit_vault_ai].iter().map(|x| check_writable(x));
+    [payer_ai, payer_vault_ai, deposit_vault_ai].iter().map(|x| check_writable(x));
 
     // Deserialize token account
     let deposit_vault = TokenAccount::unpack_from_slice(&deposit_vault_ai.try_borrow_data()?)?;
     let payer_token_account = TokenAccount::unpack_from_slice(&payer_token_account_ai.try_borrow_data()?)?;
+    let payer_vault = TokenAccount::unpack_from_slice(&payer_vault_ai.try_borrow_data()?)?;
 
     // Get subscription data
     let subscription = Subscription::try_from_slice(&subscription_ai.try_borrow_data()?)?;
@@ -43,24 +44,21 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
 
     // Validations
 
-    assert_msg(
-        payer_token_account.owner == *payer_ai.key,
-        SubscriptionError::InvalidVaultOwner.into(),
-        "Invalid vault owner",
-    )?;
+    // Check payer token account
+    check_initialized_ata(payer_vault_ai, payer_ai.key, &subscription.deposit_vault)?;
 
     // Check that caller is the rightful owner, ie. owner (payer) of the subscription 
     if let Some(current_mint) = subscription.mint {
-        check_initialized_ata(payer_vault_ai, payer_ai.key, &current_mint)?;
+        check_initialized_ata(payer_token_account_ai, payer_ai.key, &current_mint)?;
         assert_msg(
-            payer_token_account.mint == current_mint,
+            payer_token_account.amount > 0,
             SubscriptionError::InvalidSubscriptionOwner.into(),
             "Invalid subscription owner. Only the owner of a subscription associated with the deposit vault can withdraw.",
         )?;
     }
 
     assert_msg(
-        deposit_vault.amount > amount,
+        deposit_vault.amount > withdraw_amount,
         SubscriptionError::InsufficientWithdrawBalance.into(),
         "Insufficient funds to withdraw.",
     )?;
@@ -70,16 +68,16 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
     let instruction = &spl_token::instruction::transfer(
         &spl_token::id(),
         deposit_vault_ai.key,
-        payer_token_account_ai.key,
+        payer_vault_ai.key,
         payer_ai.key,
         &[],
-        amount,
+        withdraw_amount,
     )?;
 
     let subscription_seeds = &[
         b"subscription_metadata",
         payee.as_ref(),
-        &amount.to_le_bytes(),
+        &subscription.amount.to_le_bytes(),
         &duration.to_le_bytes(),
         &count.to_le_bytes(),
     ];
@@ -91,7 +89,7 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
     let subscription_seeds = &[
         b"subscription_metadata",
         payee.as_ref(),
-        &amount.to_le_bytes(),
+        &subscription.amount.to_le_bytes(),
         &duration.to_le_bytes(),
         &count.to_le_bytes(),
         &[subscription_bump],
@@ -101,7 +99,7 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
         instruction,
         &[
             deposit_vault_ai.clone(),
-            payer_token_account_ai.clone(),
+            payer_vault_ai.clone(),
             subscription_ai.clone(),
         ],
         &[subscription_seeds],
