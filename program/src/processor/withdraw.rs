@@ -1,9 +1,10 @@
 use {
     crate::{
         error::SubscriptionError,
+        instruction::SubscriptionInstruction,
         state::{Subscription},
         utils::{
-            assert_msg, check_initialized_ata, check_signer, check_writable,
+            assert_msg, check_initialized_ata, check_pda, check_signer, check_writable,
         },
     },
     borsh::{BorshDeserialize},
@@ -38,6 +39,8 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
 
     // Get subscription data
     let subscription = Subscription::try_from_slice(&subscription_ai.try_borrow_data()?)?;
+    let duration = subscription.duration;
+    let payee = subscription.payee;
 
     // Validations
 
@@ -58,7 +61,7 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
     }
 
     assert_msg(
-        payer_token_account.amount > 0,
+        deposit_vault.amount > amount,
         SubscriptionError::InsufficientWithdrawBalance.into(),
         "Insufficient funds to withdraw.",
     )?;
@@ -74,14 +77,27 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
         amount,
     )?;
 
-    let withdrawal_seeds = &[
-        b"subscription_withdrawal",
-        deposit_vault_ai.key.as_ref(),
-        payer_ai.key.as_ref(),
+    let subscription_seeds = &[
+        b"subscription_metadata",
+        payee.as_ref(),
         &amount.to_le_bytes(),
+        &duration.to_le_bytes(),
         &count.to_le_bytes(),
     ];
-    
+
+    check_pda(subscription_ai, subscription_seeds, program_id)?;
+
+    let (_, subscription_bump) = Pubkey::find_program_address(subscription_seeds, program_id);
+
+    let subscription_seeds = &[
+        b"subscription_metadata",
+        payee.as_ref(),
+        &amount.to_le_bytes(),
+        &duration.to_le_bytes(),
+        &count.to_le_bytes(),
+        &[subscription_bump],
+    ];
+
     invoke_signed(
         instruction,
         &[
@@ -89,7 +105,7 @@ pub fn process_withdraw(program_id: &Pubkey, accounts: &[AccountInfo], amount: u
             payer_token_account_ai.clone(),
             subscription_ai.clone(),
         ],
-        &[withdrawal_seeds],
+        &[subscription_seeds],
     )?;
 
     Ok(())
