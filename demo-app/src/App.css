@@ -35,9 +35,8 @@
   height: 80vh;
   padding: 20px;
 
-  background-color: rgb(0, 15, 22);
+  background-color: rgb(0, 21, 32);
   border-radius: 25px;
-  opacity: 0.5;
 
   display: flex;
   justify-content: space-between;
@@ -58,9 +57,59 @@
 }
 
 .panel {
-  margin: auto;
-  width: 40%;
-  height: 22%;
+  margin: 0 auto;
+  width: 95%;
+  /* height: 22%; */
   /* background-color: rgb(255, 15, 22); */
-  opacity: 1;
+}
+
+.two-btn-box {
+  display: flex;
+  justify-content: space-between;
+}
+
+.two-btn-box button {
+  width: 47%;
+}
+
+.loading {
+  width: 25px;
+  height: 25px;
+}
+
+input[type=text] {
+  width: 100%;
+  margin: 7px auto;
+  border: none;
+  background-color: rgb(0, 8, 11);
+  font-family: Inter;
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+}
+
+input[type=text]::placeholder {
+  color: gray;
+}
+
+button {
+  width: 100%;
+  margin: 5px auto;
+  border: none;
+  background-color: rgb(4, 113, 166);
+  font-family: Inter;
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  transition: 0.2s;
+  margin-top: 10px;
+}
+
+button:hover {
+  cursor: pointer;
+  background-color: rgb(240, 120, 70);
+  /* margin-top: 5px; */
+  transform: translate(0, -3px);
 }

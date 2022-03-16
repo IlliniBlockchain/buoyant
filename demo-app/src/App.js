@@ -1,6 +1,7 @@
-import './App.css';
-import logo from './squid_apple.png'
-import {useState, useEffect} from 'react'
+import "./App.css";
+import logo from "./squid_apple.png";
+import loading from "./loading.svg";
+import { useState, useEffect } from "react";
 
 // phantom connect
 
@@ -15,61 +16,135 @@ import {useState, useEffect} from 'react'
 // check owner - subscription address, owner - outputs owner status
 
 function App() {
-
-  const [ initData, setInitData ] = useState({
-    payee: "",
-    amount: "",
-    duration: "",
-    startingAmount: "",
+  const [inputData, setInputData] = useState({
+    initialize: {
+      payee: "",
+      amount: "",
+      duration: "",
+      startAmount: "",
+    },
+    depositWithdraw: {
+      subscriptionAddress: "",
+      amount: "",
+    },
+    renew: {
+      subscriptionAddress: "",
+    },
   });
 
-  const [ depositWithdrawData, setDepositWithdrawData ] = useState({
-    subscriptionAddress: "",
-    amount: "",
+  const [buttonState, setButtonState] = useState({
+    initialize: false,
+    deposit: false,
+    withdraw: false,
+    renew: false,
   });
 
-  const [ renewData, setRenewData ] = useState({
-    subscriptionAddress: "",
-  });
-
-  
+  function inputChange(event) {
+    const [inputGroup, inputField] = event.target.name.split(".");
+    const value = event.target.value;
+    console.log(inputData);
+    setInputData((values) => ({
+      ...values,
+      [inputGroup]: { ...values[inputGroup], [inputField]: value },
+    }));
+  }
 
   return (
     <div>
-
-      <div class="title">
-        <img class="logo" src={logo} />
-        <h1 class="logo-text">Buoyant Demo App</h1>
+      <div className="title">
+        <img className="logo" src={logo} />
+        <h1 className="logo-text">Buoyant Demo App</h1>
       </div>
 
       <div className="App">
-
-        <div class="left-box">
-
-          <div class="left-input-box">
-
-            <div class="initialize-box panel">
+        <div className="left-box">
+          <div className="left-input-box">
+            <div className="initialize-box panel">
+              <input
+                name="initialize.payee"
+                type="text"
+                value={inputData.initialize.payee}
+                onChange={inputChange}
+                placeholder={"payee"}
+              />
+              <input
+                name="initialize.amount"
+                type="text"
+                value={inputData.initialize.amount}
+                onChange={inputChange}
+                placeholder={"amount"}
+              />
+              <input
+                name="initialize.duration"
+                type="text"
+                value={inputData.initialize.duration}
+                onChange={inputChange}
+                placeholder={"duration"}
+              />
+              <input
+                name="initialize.startAmount"
+                type="text"
+                value={inputData.initialize.startAmount}
+                onChange={inputChange}
+                placeholder={"startAmount"}
+              />
+              <button>
+                {buttonState.initialize ? (
+                  <img className="loading" src={loading} />
+                ) : (
+                  "Create Subscription"
+                )}
+              </button>
             </div>
-            <div class="deposit-box panel">
-            </div>
-            <div class="withdraw-box panel">
-            </div>
-            <div class="renew-box panel">
-            </div>
 
+            <div className="deposit-box panel">
+              <input
+                name="depositWithdraw.amount"
+                type="text"
+                value={inputData.depositWithdraw.amount}
+                onChange={inputChange}
+                placeholder={"amount"}
+              />
+              <div className="two-btn-box">
+                <button>
+                  {buttonState.deposit ? (
+                    <img className="loading" src={loading} />
+                  ) : (
+                    "Deposit"
+                  )}
+                </button>
+                <button>
+                  {buttonState.withdraw ? (
+                    <img className="loading" src={loading} />
+                  ) : (
+                    "Withdraw"
+                  )}
+                </button>
+              </div>
+            </div>
+            <div className="renew-box panel">
+              <input
+                name="renew.subscriptionAddress"
+                type="text"
+                value={inputData.renew.subscriptionAddress}
+                onChange={inputChange}
+                placeholder={"subscriptionAddress"}
+              />
+              <button>
+                {buttonState.renew ? (
+                  <img className="loading" src={loading} />
+                ) : (
+                  "Renew / Expire"
+                )}
+              </button>
+            </div>
           </div>
 
-          <div class="right-input-box">
-
-          </div>
-
+          <div className="right-input-box"></div>
         </div>
 
-        <div class="right-box">
-        </div>
-
+        <div className="right-box"></div>
       </div>
-
     </div>
   );
 }
