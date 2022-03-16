@@ -2,8 +2,10 @@ import "./App.css";
 import logo from "./squid_apple.png";
 import loading from "./loading.svg";
 import { useState, useEffect } from "react";
-import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
+import { Connection, PublicKey, clusterApiUrl, Transaction } from "@solana/web3.js";
+import { NATIVE_MINT } from "@solana/spl-token";
 import { Provider } from "@project-serum/anchor";
+import { getInitializeInstruction } from "./utils";
 
 // phantom connect
 
@@ -17,7 +19,7 @@ import { Provider } from "@project-serum/anchor";
 // check active - subscription address - outputs active status
 // check owner - subscription address, owner - outputs owner status
 
-const programID = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
+const programId = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
 const network = clusterApiUrl('devnet');
 const opts = {
   preflightCommitment: "confirmed" // can also "finalized"
@@ -25,6 +27,7 @@ const opts = {
 
 function App() {
 
+  const [ output, setOutput ] = useState("");
   const [walletAddress, setWalletAddress] = useState(null);
   const [inputData, setInputData] = useState({
     initialize: {
@@ -66,7 +69,7 @@ function App() {
       window.solana,
       opts.preflightCommitment
     );
-    return provider;
+    return { provider, connection };
   };
 
   const checkIfWalletIsConnected = async () => {
@@ -119,6 +122,37 @@ function App() {
     return () => window.removeEventListener('load', onLoad);
   }, []);
 
+  const sendInit = async () => {
+    setButtonState((values) => ({...values, initialize: true}));
+    let { payee, amount, duration } = inputData.initialize;
+    payee = new PublicKey(payee);
+    amount = parseInt(amount);
+    duration = parseInt(duration);
+    const { provider, connection } = getProvider();
+    const ix = await getInitializeInstruction(
+      connection,
+      new PublicKey(walletAddress),
+      payee,
+      amount,
+      duration,
+      NATIVE_MINT
+    );
+    console.log(ix);
+    const tx = new Transaction({
+      feePayer: new PublicKey(walletAddress),
+      recentBlockhash: (await connection.getLatestBlockhash()).blockhash
+    });
+    tx.add(ix);
+    const { signature } = await window.solana.signAndSendTransaction(tx);
+    const response = await connection.confirmTransaction(signature);
+    console.log(response);
+
+    // console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+    
+    setOutput("https://explorer.solana.com/tx/" + signature + "?cluster=devnet");
+    setButtonState((values) => ({...values, initialize: false}));
+  }
+
   return (
     <div>
       <div className="top-bar">
@@ -169,7 +203,7 @@ function App() {
                 onChange={inputChange}
                 placeholder={"startAmount"}
               />
-              <button>
+              <button onClick={buttonState.initialize ? (() => {}) : sendInit}>
                 {buttonState.initialize ? (
                   <img className="loading" src={loading} />
                 ) : (
@@ -224,7 +258,9 @@ function App() {
           <div className="right-input-box"></div>
         </div>
 
-        <div className="right-box"></div>
+        <div className="right-box">
+          <p className="output">{output}</p>
+        </div>
       </div>
     </div>
   );

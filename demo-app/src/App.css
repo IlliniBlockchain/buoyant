@@ -69,6 +69,7 @@
 }
 .right-box {
   width: 30%;
+  word-break: break-all;
 }
 
 .left-input-box, .right-input-box {
