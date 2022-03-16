@@ -2,6 +2,8 @@ import "./App.css";
 import logo from "./squid_apple.png";
 import loading from "./loading.svg";
 import { useState, useEffect } from "react";
+import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
+import { Provider } from "@project-serum/anchor";
 
 // phantom connect
 
@@ -15,7 +17,15 @@ import { useState, useEffect } from "react";
 // check active - subscription address - outputs active status
 // check owner - subscription address, owner - outputs owner status
 
+const programID = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
+const network = clusterApiUrl('devnet');
+const opts = {
+  preflightCommitment: "confirmed" // can also "finalized"
+}
+
 function App() {
+
+  const [walletAddress, setWalletAddress] = useState(null);
   const [inputData, setInputData] = useState({
     initialize: {
       payee: "",
@@ -49,11 +59,82 @@ function App() {
     }));
   }
 
+  const getProvider = () => {
+    const connection = new Connection(network, opts.preflightCommitment);
+    const provider = new Provider(
+      connection,
+      window.solana,
+      opts.preflightCommitment
+    );
+    return provider;
+  };
+
+  const checkIfWalletIsConnected = async () => {
+    try {
+      const { solana } = window;
+
+      if (solana) {
+        if (solana.isPhantom) {
+          console.log('Phantom wallet found!');
+        }
+
+        /*
+         * The solana object gives us a function that will allow us to connect
+         * directly with the user's wallet!
+         */
+        const response = await solana.connect({ onlyIfTrusted: true });
+        console.log(
+          'Connected with Public Key:',
+          response.publicKey.toString()
+        );
+
+        /*
+           * Set the user's publicKey in state to be used later!
+           */
+        setWalletAddress(response.publicKey.toString());
+
+      } else {
+        alert('Solana object not found! Get a Phantom Wallet 👻');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const connectWallet = async () => {
+    const { solana } = window;
+
+    if (solana) {
+      const response = await solana.connect();
+      console.log('Connected with Public Key:', response.publicKey.toString());
+      setWalletAddress(response.publicKey.toString());
+    }
+  };
+
+  useEffect(() => {
+    const onLoad = async () => {
+      await checkIfWalletIsConnected();
+    };
+    window.addEventListener('load', onLoad);
+    return () => window.removeEventListener('load', onLoad);
+  }, []);
+
   return (
     <div>
-      <div className="title">
-        <img className="logo" src={logo} />
-        <h1 className="logo-text">Buoyant Demo App</h1>
+      <div className="top-bar">
+        <div className="title">
+          <img className="logo" src={logo} />
+          <h1 className="logo-text">Buoyant Demo App</h1>
+        </div>
+        <div className="connect-box">
+          {
+            walletAddress === null
+            ?
+            <button className="connect-btn" onClick={connectWallet}>Connect Wallet</button>
+            :
+            <h3 className="wallet-address">{walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4, -1)}</h3>
+          }
+        </div>
       </div>
 
       <div className="App">

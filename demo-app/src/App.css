@@ -7,7 +7,28 @@
   align-items: center;
 }
 
+.top-bar {
+  width: 100%;
+  display: flex;
+}
+
+.connect-box {
+  position: absolute;
+  top: 15px;
+  right: 50px;
+  /* display: none; */
+}
+
+.connect-btn {
+}
+
+.wallet-address {
+  color: white;
+  font-family: Inter;
+}
+
 .title {
+  margin: auto;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -33,10 +54,11 @@
 
 .left-box, .right-box {
   height: 80vh;
-  padding: 20px;
+  padding: 25px 20px;
 
   background-color: rgb(0, 21, 32);
   border-radius: 25px;
+  box-shadow: 12px 12px 1px black;
 
   display: flex;
   justify-content: space-between;
@@ -100,7 +122,7 @@ button {
   background-color: rgb(4, 113, 166);
   font-family: Inter;
   color: white;
-  padding: 10px;
+  padding: 10px 15px;
   border-radius: 10px;
   font-size: 1.2rem;
   transition: 0.2s;
