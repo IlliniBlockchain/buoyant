@@ -8,9 +8,12 @@ import {
   clusterApiUrl,
   Transaction,
 } from "@solana/web3.js";
-import { NATIVE_MINT } from "@solana/spl-token";
+import {
+  NATIVE_MINT,
+} from "@solana/spl-token";
 import { Provider } from "@project-serum/anchor";
-import { getInitializeInstruction } from "./utils";
+import { getInitializeInstruction, getDepositInstruction } from "./utils";
+import ActionButton from "./ActionButton";
 
 // phantom connect
 
@@ -38,7 +41,7 @@ function App() {
       payee: "5PWsJe6h2kVEYPkdhhZZgftQfkPbkB3DTooQZR2AfkFb",
       amount: "",
       duration: "",
-      depositMint: NATIVE_MINT.toBase58(),
+      depositMint: "9cMVucmpfyyuUGhN4KgtpS1NcFxcU18LL8KkycgnZnMM",
       startAmount: "",
     },
     depositWithdraw: {
@@ -60,7 +63,6 @@ function App() {
   function inputChange(event) {
     const [inputGroup, inputField] = event.target.name.split(".");
     const value = event.target.value;
-    console.log(inputData);
     setInputData((values) => ({
       ...values,
       [inputGroup]: { ...values[inputGroup], [inputField]: value },
@@ -128,36 +130,89 @@ function App() {
 
   const sendInit = async () => {
     setButtonState((values) => ({ ...values, initialize: true }));
-    let { payee, amount, duration, depositMint, startAmount } = inputData.initialize;
+    let { payee, amount, duration, depositMint, startAmount } =
+      inputData.initialize;
     payee = new PublicKey(payee);
     amount = parseInt(amount);
     duration = parseInt(duration);
     depositMint = new PublicKey(depositMint);
     const { provider, connection } = getProvider();
-    const ix = await getInitializeInstruction(
-      connection,
-      new PublicKey(walletAddress),
-      payee,
-      amount,
-      duration,
-      NATIVE_MINT
-    );
-    console.log(ix);
-    const tx = new Transaction({
-      feePayer: new PublicKey(walletAddress),
-      recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
-    });
-    tx.add(ix);
-    const { signature } = await window.solana.signAndSendTransaction(tx);
-    const response = await connection.confirmTransaction(signature);
-    console.log(response);
 
-    // console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+    try {
+      const ix = await getInitializeInstruction(
+        connection,
+        new PublicKey(walletAddress),
+        payee,
+        amount,
+        duration,
+        depositMint
+      );
+      console.log(ix);
+      const tx = new Transaction({
+        feePayer: new PublicKey(walletAddress),
+        recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+      });
+      tx.add(ix);
+      const { signature } = await window.solana.signAndSendTransaction(tx);
+      const response = await connection.confirmTransaction(signature);
+      console.log(response);
 
-    setOutput(
-      <a href={"https://explorer.solana.com/tx/" + signature + "?cluster=devnet"}>Link to transaction on explorer</a>
-    );
-    setButtonState((values) => ({ ...values, initialize: false }));
+      // console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+
+      setOutput(
+        <a
+          href={
+            "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
+          }
+          target="_blank"
+        >
+          Successful initialization. Link to transaction on explorer
+        </a>
+      );
+      setButtonState((values) => ({ ...values, initialize: false }));
+    } catch (err) {
+      console.log(err);
+      setOutput("Error occurred. Check browser logs.");
+      setButtonState((values) => ({ ...values, initialize: false }));
+    }
+  };
+
+  const sendDeposit = async () => {
+    setButtonState((values) => ({ ...values, deposit: true }));
+    let { subscriptionAddress, amount } = inputData.depositWithdraw;
+    subscriptionAddress = new PublicKey(subscriptionAddress);
+    amount = parseInt(amount);
+    const { provider, connection } = getProvider();
+
+    try {
+      const ix = await getDepositInstruction(connection, new PublicKey(walletAddress), subscriptionAddress, amount);
+      console.log(ix);
+      const tx = new Transaction({
+        feePayer: new PublicKey(walletAddress),
+        recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+      });
+      tx.add(ix);
+      const { signature } = await window.solana.signAndSendTransaction(tx);
+      const response = await connection.confirmTransaction(signature);
+      console.log(response);
+
+      setOutput(
+        <a
+          href={
+            "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
+          }
+          target="_blank"
+        >
+          Successful deposit. Link to transaction on explorer
+        </a>
+      );
+      setButtonState((values) => ({ ...values, deposit: false }));
+
+    } catch (err) {
+      console.log(err);
+      setOutput("Error occurred. Check browser logs.");
+      setButtonState((values) => ({ ...values, deposit: false }));
+    }
   };
 
   return (
@@ -174,7 +229,7 @@ function App() {
             </button>
           ) : (
             <h3 className="wallet-address">
-              {walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4, -1)}
+              {walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4, walletAddress.length)}
             </h3>
           )}
         </div>
@@ -219,16 +274,21 @@ function App() {
                 onChange={inputChange}
                 placeholder={"startAmount"}
               />
-              <button onClick={buttonState.initialize ? () => {} : sendInit}>
-                {buttonState.initialize ? (
-                  <img className="loading" src={loading} />
-                ) : (
-                  "Create Subscription"
-                )}
-              </button>
+              <ActionButton
+                label={"Create Subscription"}
+                loading={buttonState.initialize}
+                clickHandler={sendInit}
+              />
             </div>
 
             <div className="deposit-box panel">
+              <input
+                name="depositWithdraw.subscriptionAddress"
+                type="text"
+                value={inputData.depositWithdraw.subscriptionAddress}
+                onChange={inputChange}
+                placeholder={"subscriptionAddress"}
+              />
               <input
                 name="depositWithdraw.amount"
                 type="text"
@@ -237,13 +297,7 @@ function App() {
                 placeholder={"amount"}
               />
               <div className="two-btn-box">
-                <button>
-                  {buttonState.deposit ? (
-                    <img className="loading" src={loading} />
-                  ) : (
-                    "Deposit"
-                  )}
-                </button>
+                <ActionButton label={"Deposit"} loading={buttonState.deposit} clickHandler={sendDeposit} />
                 <button>
                   {buttonState.withdraw ? (
                     <img className="loading" src={loading} />

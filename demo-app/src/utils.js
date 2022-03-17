@@ -9,16 +9,25 @@ const {
   SYSVAR_RENT_PUBKEY,
 } = require("@solana/web3.js");
 const {
-  getAssociatedTokenAddress,
+  Token,
+  // getAssociatedTokenAddress,
+  // createTransferInstruction,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");
+const { getAssociatedTokenAddress, createTransferInstruction } = Token;
 const BN = require("bn.js");
 const { Buffer } = require("buffer");
 
 const programId = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
 
-const findAccounts = async (connection, payeeKey, amount, duration, mintKey) => {
+const findAccounts = async (
+  connection,
+  payeeKey,
+  amount,
+  duration,
+  mintKey
+) => {
   // get counter PDA
   const [counterKey, counterBump] = await PublicKey.findProgramAddress(
     [
@@ -54,6 +63,8 @@ const findAccounts = async (connection, payeeKey, amount, duration, mintKey) => 
   // get associated token account
 
   const depositVault = await getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
     mintKey,
     subKey,
     true
@@ -142,4 +153,40 @@ const getInitializeInstruction = async (
   return initIx;
 };
 
-module.exports = { getInitializeInstruction };
+const getDepositInstruction = async (connection, user, subKey, amount) => {
+  const subAccount = await connection.getAccountInfo(subKey);
+  const initialized = subAccount.data[1] === 1;
+
+  const depositVault = !initialized
+    ? new PublicKey(subAccount.data.slice(2, 34))
+    : new PublicKey(subAccount.data.slice(34, 66));
+  console.log("depositVault", depositVault.toBase58());
+
+  const depositMint = !initialized
+    ? new PublicKey(subAccount.data.slice(34, 66))
+    : new PublicKey(subAccount.data.slice(66, 98));
+  console.log("depositMint", depositMint.toBase58());
+
+  const userDepositVault = await getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    depositMint,
+    user
+  );
+  console.log("userDepositVault", userDepositVault.toBase58());
+
+  const depositIx = createTransferInstruction(
+    TOKEN_PROGRAM_ID,
+    userDepositVault,
+    depositVault,
+    user,
+    [],
+    amount
+  );
+
+  return depositIx;
+
+  // export declare function createTransferCheckedInstruction(source: PublicKey, mint: PublicKey, destination: PublicKey, owner: PublicKey, amount: number | bigint, decimals: number, multiSigners?: Signer[], programId?: PublicKey): TransactionInstruction;
+};
+
+module.exports = { getInitializeInstruction, getDepositInstruction };

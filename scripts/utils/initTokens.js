@@ -38,10 +38,20 @@ const initTokens = async () => {
     user.publicKey,
   );
 
+  const user2TokenAccount = await mint.getOrCreateAssociatedAccountInfo(
+    new PublicKey("FKiVnXRfi4nb6YGuvE4HSv851vnMwAkTDhzPY4TYQzT8"),
+  );
+
   // mint tokens to user
   console.log("Minting tokens to user...");
   await mint.mintTo(
     userTokenAccount.address,
+    mintAuthority.publicKey,
+    [],
+    100 * (10 ** mintDecimals),
+  );
+  await mint.mintTo(
+    user2TokenAccount.address,
     mintAuthority.publicKey,
     [],
     100 * (10 ** mintDecimals),
