@@ -15,7 +15,7 @@
 .connect-box {
   position: absolute;
   top: 15px;
-  right: 50px;
+  right: 4%;
   /* display: none; */
 }
 
@@ -69,6 +69,7 @@
 .right-box {
   width: 30%;
   word-break: break-all;
+  padding: 25px 25px;
 }
 
 .left-input-box, .right-input-box {
@@ -101,7 +102,7 @@
 
 input[type=text] {
   width: 100%;
-  margin: 7px auto;
+  margin: 5px auto;
   border: none;
   background-color: rgb(0, 8, 11);
   font-family: Inter;

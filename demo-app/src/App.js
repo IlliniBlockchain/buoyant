@@ -2,14 +2,19 @@ import "./App.css";
 import logo from "./squid_apple.png";
 import loading from "./loading.svg";
 import { useState, useEffect } from "react";
-import { Connection, PublicKey, clusterApiUrl, Transaction } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  clusterApiUrl,
+  Transaction,
+} from "@solana/web3.js";
 import { NATIVE_MINT } from "@solana/spl-token";
 import { Provider } from "@project-serum/anchor";
 import { getInitializeInstruction } from "./utils";
 
 // phantom connect
 
-// initialize - payee, amount, duration, starting amount (to deposit) - outputs subscription metadata address
+// initialize - payee, amount, duration, mint, starting amount (to deposit) - outputs subscription metadata address
 // deposit - subscription address, amount
 // withdraw - subscription address, amount
 // renew - subscription address
@@ -20,20 +25,20 @@ import { getInitializeInstruction } from "./utils";
 // check owner - subscription address, owner - outputs owner status
 
 const programId = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
-const network = clusterApiUrl('devnet');
+const network = clusterApiUrl("devnet");
 const opts = {
-  preflightCommitment: "confirmed" // can also "finalized"
-}
+  preflightCommitment: "confirmed", // can also "finalized"
+};
 
 function App() {
-
-  const [ output, setOutput ] = useState("");
+  const [output, setOutput] = useState("");
   const [walletAddress, setWalletAddress] = useState(null);
   const [inputData, setInputData] = useState({
     initialize: {
-      payee: "",
+      payee: "5PWsJe6h2kVEYPkdhhZZgftQfkPbkB3DTooQZR2AfkFb",
       amount: "",
       duration: "",
+      depositMint: NATIVE_MINT.toBase58(),
       startAmount: "",
     },
     depositWithdraw: {
@@ -78,7 +83,7 @@ function App() {
 
       if (solana) {
         if (solana.isPhantom) {
-          console.log('Phantom wallet found!');
+          console.log("Phantom wallet found!");
         }
 
         /*
@@ -87,17 +92,16 @@ function App() {
          */
         const response = await solana.connect({ onlyIfTrusted: true });
         console.log(
-          'Connected with Public Key:',
+          "Connected with Public Key:",
           response.publicKey.toString()
         );
 
         /*
-           * Set the user's publicKey in state to be used later!
-           */
+         * Set the user's publicKey in state to be used later!
+         */
         setWalletAddress(response.publicKey.toString());
-
       } else {
-        alert('Solana object not found! Get a Phantom Wallet 👻');
+        alert("Solana object not found! Get a Phantom Wallet 👻");
       }
     } catch (error) {
       console.error(error);
@@ -109,7 +113,7 @@ function App() {
 
     if (solana) {
       const response = await solana.connect();
-      console.log('Connected with Public Key:', response.publicKey.toString());
+      console.log("Connected with Public Key:", response.publicKey.toString());
       setWalletAddress(response.publicKey.toString());
     }
   };
@@ -118,16 +122,17 @@ function App() {
     const onLoad = async () => {
       await checkIfWalletIsConnected();
     };
-    window.addEventListener('load', onLoad);
-    return () => window.removeEventListener('load', onLoad);
+    window.addEventListener("load", onLoad);
+    return () => window.removeEventListener("load", onLoad);
   }, []);
 
   const sendInit = async () => {
-    setButtonState((values) => ({...values, initialize: true}));
-    let { payee, amount, duration } = inputData.initialize;
+    setButtonState((values) => ({ ...values, initialize: true }));
+    let { payee, amount, duration, depositMint, startAmount } = inputData.initialize;
     payee = new PublicKey(payee);
     amount = parseInt(amount);
     duration = parseInt(duration);
+    depositMint = new PublicKey(depositMint);
     const { provider, connection } = getProvider();
     const ix = await getInitializeInstruction(
       connection,
@@ -140,7 +145,7 @@ function App() {
     console.log(ix);
     const tx = new Transaction({
       feePayer: new PublicKey(walletAddress),
-      recentBlockhash: (await connection.getLatestBlockhash()).blockhash
+      recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
     });
     tx.add(ix);
     const { signature } = await window.solana.signAndSendTransaction(tx);
@@ -148,10 +153,12 @@ function App() {
     console.log(response);
 
     // console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
-    
-    setOutput("https://explorer.solana.com/tx/" + signature + "?cluster=devnet");
-    setButtonState((values) => ({...values, initialize: false}));
-  }
+
+    setOutput(
+      <a href={"https://explorer.solana.com/tx/" + signature + "?cluster=devnet"}>Link to transaction on explorer</a>
+    );
+    setButtonState((values) => ({ ...values, initialize: false }));
+  };
 
   return (
     <div>
@@ -161,13 +168,15 @@ function App() {
           <h1 className="logo-text">Buoyant Demo App</h1>
         </div>
         <div className="connect-box">
-          {
-            walletAddress === null
-            ?
-            <button className="connect-btn" onClick={connectWallet}>Connect Wallet</button>
-            :
-            <h3 className="wallet-address">{walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4, -1)}</h3>
-          }
+          {walletAddress === null ? (
+            <button className="connect-btn" onClick={connectWallet}>
+              Connect Wallet
+            </button>
+          ) : (
+            <h3 className="wallet-address">
+              {walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4, -1)}
+            </h3>
+          )}
         </div>
       </div>
 
@@ -197,13 +206,20 @@ function App() {
                 placeholder={"duration"}
               />
               <input
+                name="initialize.depositMint"
+                type="text"
+                value={inputData.initialize.depositMint}
+                onChange={inputChange}
+                placeholder={"depositMint"}
+              />
+              <input
                 name="initialize.startAmount"
                 type="text"
                 value={inputData.initialize.startAmount}
                 onChange={inputChange}
                 placeholder={"startAmount"}
               />
-              <button onClick={buttonState.initialize ? (() => {}) : sendInit}>
+              <button onClick={buttonState.initialize ? () => {} : sendInit}>
                 {buttonState.initialize ? (
                   <img className="loading" src={loading} />
                 ) : (
