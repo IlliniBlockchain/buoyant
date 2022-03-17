@@ -8,11 +8,13 @@ import {
   clusterApiUrl,
   Transaction,
 } from "@solana/web3.js";
-import {
-  NATIVE_MINT,
-} from "@solana/spl-token";
+import { NATIVE_MINT } from "@solana/spl-token";
 import { Provider } from "@project-serum/anchor";
-import { getInitializeInstruction, getDepositInstruction, getRenewInstruction } from "./utils";
+import {
+  getInitializeInstruction,
+  getDepositInstruction,
+  getRenewInstruction,
+} from "./utils";
 import ActionButton from "./ActionButton";
 
 // phantom connect
@@ -23,7 +25,7 @@ import ActionButton from "./ActionButton";
 // renew - subscription address
 
 // send subscription - subscription, person's normal account - creates associated + transfers
-// show metadata - subscription address - outputs data
+// show metadata - subscription address - outputs subscription data, deposit vault balance
 // check active - subscription address - outputs active status
 // check owner - subscription address, owner - outputs owner status
 
@@ -51,6 +53,13 @@ function App() {
     renew: {
       subscriptionAddress: "",
     },
+    sendOwner: {
+      subscriptionAddress: "",
+      newOwner: "",
+    },
+    metadataActive: {
+      subscriptionAddress: "",
+    },
   });
 
   const [buttonState, setButtonState] = useState({
@@ -58,6 +67,10 @@ function App() {
     deposit: false,
     withdraw: false,
     renew: false,
+    send: false,
+    metadata: false,
+    active: false,
+    owner: false,
   });
 
   function inputChange(event) {
@@ -185,7 +198,12 @@ function App() {
     const { provider, connection } = getProvider();
 
     try {
-      const ix = await getDepositInstruction(connection, new PublicKey(walletAddress), subscriptionAddress, amount);
+      const ix = await getDepositInstruction(
+        connection,
+        new PublicKey(walletAddress),
+        subscriptionAddress,
+        amount
+      );
       console.log(ix);
       const tx = new Transaction({
         feePayer: new PublicKey(walletAddress),
@@ -207,7 +225,6 @@ function App() {
         </a>
       );
       setButtonState((values) => ({ ...values, deposit: false }));
-
     } catch (err) {
       console.log(err);
       setOutput("Error occurred. Check browser logs.");
@@ -223,7 +240,12 @@ function App() {
 
     try {
       // can change subowner to be an optional argument, maybe another input
-      const ix = await getRenewInstruction(connection, subscriptionAddress, new PublicKey(walletAddress), new PublicKey(walletAddress));
+      const ix = await getRenewInstruction(
+        connection,
+        subscriptionAddress,
+        new PublicKey(walletAddress),
+        new PublicKey(walletAddress)
+      );
       console.log(ix);
       const tx = new Transaction({
         feePayer: new PublicKey(walletAddress),
@@ -245,13 +267,20 @@ function App() {
         </a>
       );
       setButtonState((values) => ({ ...values, renew: false }));
-
     } catch (err) {
       console.log(err);
       setOutput("Error occurred. Check browser logs.");
       setButtonState((values) => ({ ...values, renew: false }));
     }
   };
+
+  const sendSend = async () => {};
+
+  const showOwner = async () => {};
+
+  const showMetadata = async () => {};
+
+  const showActive = async () => {};
 
   return (
     <div>
@@ -262,12 +291,16 @@ function App() {
         </div>
         <div className="connect-box">
           {walletAddress === null ? (
-            <button className="connect-btn" onClick={connectWallet}>
-              Connect Wallet
-            </button>
+            <ActionButton
+              label={"Connect Wallet"}
+              loading={false}
+              clickHandler={connectWallet}
+            />
           ) : (
             <h3 className="wallet-address">
-              {walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4, walletAddress.length)}
+              {walletAddress.slice(0, 4) +
+                "..." +
+                walletAddress.slice(-4, walletAddress.length)}
             </h3>
           )}
         </div>
@@ -335,7 +368,11 @@ function App() {
                 placeholder={"amount"}
               />
               <div className="two-btn-box">
-                <ActionButton label={"Deposit"} loading={buttonState.deposit} clickHandler={sendDeposit} />
+                <ActionButton
+                  label={"Deposit"}
+                  loading={buttonState.deposit}
+                  clickHandler={sendDeposit}
+                />
                 <button>
                   {buttonState.withdraw ? (
                     <img className="loading" src={loading} />
@@ -353,11 +390,64 @@ function App() {
                 onChange={inputChange}
                 placeholder={"subscriptionAddress"}
               />
-              <ActionButton label={"Renew / Expire"} loading={buttonState.renew} clickHandler={sendRenew}/>
+              <ActionButton
+                label={"Renew / Expire"}
+                loading={buttonState.renew}
+                clickHandler={sendRenew}
+              />
             </div>
           </div>
 
-          <div className="right-input-box"></div>
+          <div className="right-input-box">
+            <div className="send-box panel">
+              <input
+                name="sendOwner.subscriptionAddress"
+                type="text"
+                value={inputData.sendOwner.subscriptionAddress}
+                onChange={inputChange}
+                placeholder={"subscriptionAddress"}
+              />
+              <input
+                name="sendOwner.newOwner"
+                type="text"
+                value={inputData.sendOwner.newOwner}
+                onChange={inputChange}
+                placeholder={"newOwner"}
+              />
+              <div className="two-btn-box">
+                <ActionButton
+                  label={"Send"}
+                  loading={buttonState.send}
+                  clickHandler={sendSend}
+                />
+                <ActionButton
+                  label={"Check Owner"}
+                  loading={buttonState.owner}
+                  clickHandler={showOwner}
+                />
+              </div>
+            </div>
+
+            <div className="metadata-box panel">
+              <input
+                name="metadataActive.subscriptionAddress"
+                type="text"
+                value={inputData.metadataActive.subscriptionAddress}
+                onChange={inputChange}
+                placeholder={"subscriptionAddress"}
+              />
+              <ActionButton
+                label={"Show Metadata"}
+                loading={buttonState.metadata}
+                clickHandler={showMetadata}
+              />
+              <ActionButton
+                label={"Show Active Status"}
+                loading={buttonState.active}
+                clickHandler={showActive}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="right-box">

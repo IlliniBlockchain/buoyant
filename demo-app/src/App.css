@@ -79,6 +79,14 @@
   justify-content: space-between;
 }
 
+.right-input-box {
+  justify-content: flex-start;
+}
+
+.right-input-box div {
+  margin-bottom: 5px;
+}
+
 .panel {
   margin: 0 auto;
   width: 95%;
@@ -113,7 +121,7 @@ input[type=text] {
 }
 
 input[type=text]::placeholder {
-  color: gray;
+  /* color: gray; */
 }
 
 button {
