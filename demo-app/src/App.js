@@ -12,7 +12,7 @@ import {
   NATIVE_MINT,
 } from "@solana/spl-token";
 import { Provider } from "@project-serum/anchor";
-import { getInitializeInstruction, getDepositInstruction } from "./utils";
+import { getInitializeInstruction, getDepositInstruction, getRenewInstruction } from "./utils";
 import ActionButton from "./ActionButton";
 
 // phantom connect
@@ -215,6 +215,44 @@ function App() {
     }
   };
 
+  const sendRenew = async () => {
+    setButtonState((values) => ({ ...values, renew: true }));
+    let { subscriptionAddress } = inputData.renew;
+    subscriptionAddress = new PublicKey(subscriptionAddress);
+    const { provider, connection } = getProvider();
+
+    try {
+      // can change subowner to be an optional argument, maybe another input
+      const ix = await getRenewInstruction(connection, subscriptionAddress, new PublicKey(walletAddress), new PublicKey(walletAddress));
+      console.log(ix);
+      const tx = new Transaction({
+        feePayer: new PublicKey(walletAddress),
+        recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+      });
+      tx.add(ix);
+      const { signature } = await window.solana.signAndSendTransaction(tx);
+      const response = await connection.confirmTransaction(signature);
+      console.log(response);
+
+      setOutput(
+        <a
+          href={
+            "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
+          }
+          target="_blank"
+        >
+          Successful renew. Link to transaction on explorer
+        </a>
+      );
+      setButtonState((values) => ({ ...values, renew: false }));
+
+    } catch (err) {
+      console.log(err);
+      setOutput("Error occurred. Check browser logs.");
+      setButtonState((values) => ({ ...values, renew: false }));
+    }
+  };
+
   return (
     <div>
       <div className="top-bar">
@@ -315,13 +353,7 @@ function App() {
                 onChange={inputChange}
                 placeholder={"subscriptionAddress"}
               />
-              <button>
-                {buttonState.renew ? (
-                  <img className="loading" src={loading} />
-                ) : (
-                  "Renew / Expire"
-                )}
-              </button>
+              <ActionButton label={"Renew / Expire"} loading={buttonState.renew} clickHandler={sendRenew}/>
             </div>
           </div>
 
