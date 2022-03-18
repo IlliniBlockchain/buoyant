@@ -9,6 +9,9 @@ use {
 
 pub mod initialize;
 pub mod renew;
+pub mod deposit;
+
+use spl_token::*;
 
 pub struct Processor {}
 
@@ -36,6 +39,7 @@ impl Processor {
             SubscriptionInstruction::Deposit { amount } => {
                 msg!("Instruction: Deposit");
                 msg!("amount: {}", amount);
+                deposit::deposit_to(accounts, amount)?;
             }
             SubscriptionInstruction::Withdraw { amount } => {
                 msg!("Instruction: Withdraw");
@@ -49,7 +53,7 @@ impl Processor {
                 msg!("Instruction: Close");
             }
         }
-
+        
         Ok(())
     }
 }
