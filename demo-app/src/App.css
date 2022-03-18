@@ -147,3 +147,7 @@ button:hover {
   /* margin-top: 5px; */
   transform: translate(0, -3px);
 }
+
+.btn-orange {
+  background-color: rgb(240, 120, 70);
+}

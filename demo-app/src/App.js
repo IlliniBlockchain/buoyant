@@ -15,7 +15,9 @@ import {
   getDepositInstruction,
   getRenewInstruction,
   unpackSubscription,
-  findTokenHolder
+  findTokenHolder,
+  getCreateAtaInstruction,
+  getSendInstruction
 } from "./utils";
 import ActionButton from "./ActionButton";
 
@@ -277,7 +279,47 @@ function App() {
     }
   };
 
-  const sendSend = async () => {};
+  const sendSend = async () => {
+
+    setButtonState((values) => ({ ...values, send: true }));
+    let { subscriptionAddress, newOwner} = inputData.sendOwner;
+    subscriptionAddress = new PublicKey(subscriptionAddress);
+    newOwner = new PublicKey(newOwner);
+    const { provider, connection } = getProvider();
+
+    try {
+
+      const createIx = await getCreateAtaInstruction(connection, subscriptionAddress, newOwner, new PublicKey(walletAddress));
+      const sendIx = await getSendInstruction(connection, subscriptionAddress, newOwner, new PublicKey(walletAddress));
+
+      const tx = new Transaction({
+        feePayer: new PublicKey(walletAddress),
+        recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
+      });
+
+      tx.add(createIx).add(sendIx);
+      const { signature } = await window.solana.signAndSendTransaction(tx);
+      const response = await connection.confirmTransaction(signature);
+      console.log(response);
+
+      setOutput(
+        <a
+          href={
+            "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
+          }
+          target="_blank"
+        >
+          Successful send. Link to transaction on explorer
+        </a>
+      );
+      setButtonState((values) => ({ ...values, send: false }));
+    } catch (err) {
+      console.log(err);
+      setOutput("Error occurred. Check browser logs.");
+      setButtonState((values) => ({ ...values, send: false }));
+    }
+
+  };
 
   const showOwner = async () => {
 
@@ -488,7 +530,7 @@ function App() {
                 type="text"
                 value={inputData.sendOwner.newOwner}
                 onChange={inputChange}
-                placeholder={"user"}
+                placeholder={"owner"}
               />
               <div className="two-btn-box">
                 <ActionButton

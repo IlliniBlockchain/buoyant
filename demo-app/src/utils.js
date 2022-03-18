@@ -15,7 +15,7 @@ const {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } = require("@solana/spl-token");
-const { getAssociatedTokenAddress, createTransferInstruction } = Token;
+const { getAssociatedTokenAddress, createTransferInstruction, createAssociatedTokenAccountInstruction } = Token;
 const BN = require("bn.js");
 const { Buffer } = require("buffer");
 
@@ -510,4 +510,66 @@ const getRenewInstruction = async (connection, subKey, subOwner, caller) => {
   return renewIx;
 }
 
-module.exports = { getInitializeInstruction, getDepositInstruction, getRenewInstruction, unpackSubscription, findTokenHolder };
+const getCreateAtaInstruction = async (connection, subKey, newOwner, user) => {
+
+  const subAccount = await connection.getAccountInfo(subKey);
+  const subData = unpackSubscription(subAccount.data);
+  const { mint } = subData;
+
+  if (mint == null) return null;
+
+  const newOwnerAta = await getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mint,
+    newOwner
+  );
+
+  const createIx = createAssociatedTokenAccountInstruction(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mint,
+    newOwnerAta,
+    newOwner,
+    user,
+  );
+
+  return createIx;
+}
+
+const getSendInstruction = async (connection, subKey, newOwner, user) => {
+
+  const subAccount = await connection.getAccountInfo(subKey);
+  const subData = unpackSubscription(subAccount.data);
+  const { mint } = subData;
+
+  if (mint == null) return null;
+
+  const userAta = await getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mint,
+    user,
+  );
+
+  const newOwnerAta = await getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mint,
+    newOwner
+  );
+
+  const depositIx = createTransferInstruction(
+    TOKEN_PROGRAM_ID,
+    userAta,
+    newOwnerAta,
+    user,
+    [],
+    1,
+  );
+
+  return depositIx;
+
+}
+
+module.exports = { getInitializeInstruction, getDepositInstruction, getRenewInstruction, getCreateAtaInstruction, getSendInstruction, unpackSubscription, findTokenHolder };
