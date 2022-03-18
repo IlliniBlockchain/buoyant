@@ -14,7 +14,8 @@ import {
   getInitializeInstruction,
   getDepositInstruction,
   getRenewInstruction,
-  unpackSubscription
+  unpackSubscription,
+  findTokenHolder
 } from "./utils";
 import ActionButton from "./ActionButton";
 
@@ -278,7 +279,46 @@ function App() {
 
   const sendSend = async () => {};
 
-  const showOwner = async () => {};
+  const showOwner = async () => {
+
+    setButtonState((values) => ({ ...values, owner: true }));
+    let { subscriptionAddress, newOwner } = inputData.sendOwner;
+
+    try {
+      subscriptionAddress = new PublicKey(subscriptionAddress);
+      newOwner = new PublicKey(newOwner);
+      const { provider, connection } = getProvider();
+
+      const subAccount = await connection.getAccountInfo(subscriptionAddress);
+      const subData = unpackSubscription(subAccount.data);
+      const { mint } = subData;
+      let output = <h3>No owner.</h3>;
+      if (mint != null) {
+        const tokenHolder = await findTokenHolder(connection, mint);
+        output = 
+          <>
+            <h3>Address input is not owner.</h3>
+            <p>Owner: {tokenHolder.toBase58()}</p>
+          </>;
+        if (newOwner.toBase58() == tokenHolder.toBase58()) {
+          output = 
+            <>
+              <h3>Address input is owner.</h3>
+              <p>Owner: {tokenHolder.toBase58()}</p>
+            </>;
+        }
+      }
+      
+      setOutput(output);
+      setButtonState((values) => ({ ...values, owner: false }));
+
+    } catch (err) {
+      console.log(err);
+      setOutput("Subscription expired, invalid inputs, or other error occurred. Check browser logs.");
+      setButtonState((values) => ({ ...values, owner: false }));
+    }
+
+  };
 
   const showMetadata = async () => {
 
@@ -448,7 +488,7 @@ function App() {
                 type="text"
                 value={inputData.sendOwner.newOwner}
                 onChange={inputChange}
-                placeholder={"newOwner"}
+                placeholder={"user"}
               />
               <div className="two-btn-box">
                 <ActionButton

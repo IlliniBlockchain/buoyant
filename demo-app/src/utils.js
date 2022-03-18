@@ -510,4 +510,4 @@ const getRenewInstruction = async (connection, subKey, subOwner, caller) => {
   return renewIx;
 }
 
-module.exports = { getInitializeInstruction, getDepositInstruction, getRenewInstruction, unpackSubscription };
+module.exports = { getInitializeInstruction, getDepositInstruction, getRenewInstruction, unpackSubscription, findTokenHolder };
