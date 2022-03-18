@@ -14,6 +14,7 @@ import {
   getInitializeInstruction,
   getDepositInstruction,
   getRenewInstruction,
+  unpackSubscription
 } from "./utils";
 import ActionButton from "./ActionButton";
 
@@ -76,6 +77,7 @@ function App() {
   function inputChange(event) {
     const [inputGroup, inputField] = event.target.name.split(".");
     const value = event.target.value;
+    console.log(inputData);
     setInputData((values) => ({
       ...values,
       [inputGroup]: { ...values[inputGroup], [inputField]: value },
@@ -278,9 +280,43 @@ function App() {
 
   const showOwner = async () => {};
 
-  const showMetadata = async () => {};
+  const showMetadata = async () => {
 
-  const showActive = async () => {};
+    setButtonState((values) => ({ ...values, metadata: true }));
+    let { subscriptionAddress } = inputData.metadataActive;
+    subscriptionAddress = new PublicKey(subscriptionAddress);
+    const { provider, connection } = getProvider();
+
+    try {
+      const subAccount = await connection.getAccountInfo(subscriptionAddress);
+      const subData = unpackSubscription(subAccount.data);
+      const { active, depositVault, depositMint, payee, amount, duration, nextRenewTime } = subData;
+
+      const depositVaultBalance = await connection.getTokenAccountBalance(depositVault);
+
+      setOutput(
+        <>
+          <h3>Subscription Metadata</h3>
+          <p>Active: {active.toString()}</p>
+          <p>depositVault: {depositVault.toBase58()}</p>
+          <p>depositVault balance: {depositVaultBalance.value.amount}</p>
+          <p>depositMint: {depositMint.toBase58()}</p>
+          <p>payee: {payee.toBase58()}</p>
+          <p>amount: {amount.toNumber()}</p>
+          <p>duration: {duration.toNumber()}</p>
+          <p>nextRenewTime: {nextRenewTime.toNumber()}</p>
+        </>
+      );
+      setButtonState((values) => ({ ...values, metadata: false }));
+
+    } catch (err) {
+      console.log(err);
+      setOutput("Subscription expired or error occurred. Check browser logs.");
+      setButtonState((values) => ({ ...values, metadata: false }));
+    }
+
+  };
+
 
   return (
     <div>
@@ -440,11 +476,6 @@ function App() {
                 label={"Show Metadata"}
                 loading={buttonState.metadata}
                 clickHandler={showMetadata}
-              />
-              <ActionButton
-                label={"Show Active Status"}
-                loading={buttonState.active}
-                clickHandler={showActive}
               />
             </div>
           </div>

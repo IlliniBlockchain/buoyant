@@ -33,6 +33,7 @@
   justify-content: center;
   align-items: center;
   padding-top: 10px;
+  font-family: DM Sans;
 }
 
 .logo {
@@ -69,6 +70,7 @@
 .right-box {
   width: 30%;
   line-break: auto;
+  word-break: break-all;
   padding: 25px 25px;
 }
 
@@ -101,6 +103,7 @@
 
 .two-btn-box button {
   width: 47%;
+  margin: 10px 0;
 }
 
 .loading {
