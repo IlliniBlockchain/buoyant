@@ -7,9 +7,7 @@ use solana_program::{
 
 use spl_token::*;
 
-use crate::{
-    utils::check_program_id,
-};
+use crate::utils::{check_program_id, check_writable, check_signer};
 
 pub fn deposit_to(
     accounts: &[AccountInfo],
@@ -25,6 +23,11 @@ pub fn deposit_to(
 
     //check program id with spl_token
     check_program_id(token_program_ai, &spl_token::id())?;
+
+    check_signer(payer)?;
+    check_writable(payer)?;
+    check_writable(payer_token)?;
+    check_writable(vault)?;
 
     //this function does some stuff by making the account a "token account"
     let payer_token_account = spl_token::state::Account::unpack_from_slice(&payer_token.try_borrow_data()?)?;
