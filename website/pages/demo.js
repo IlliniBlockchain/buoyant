@@ -1,6 +1,7 @@
-import "./App.css";
-import logo from "./squid_apple.png";
-import loading from "./loading.svg";
+import Head from "next/head";
+import Image from "next/image";
+import styles from "../styles/Demo.module.css";
+
 import { useState, useEffect } from "react";
 import {
   Connection,
@@ -8,7 +9,6 @@ import {
   clusterApiUrl,
   Transaction,
 } from "@solana/web3.js";
-import { NATIVE_MINT } from "@solana/spl-token";
 import { Provider } from "@project-serum/anchor";
 import {
   getInitializeInstruction,
@@ -18,9 +18,9 @@ import {
   findTokenHolder,
   getCreateAtaInstruction,
   getSendInstruction,
-  getSubscriptionKey
-} from "./utils";
-import ActionButton from "./ActionButton";
+  getSubscriptionKey,
+} from "../utils/utils";
+import ActionButton from "../components/ActionButton";
 
 // phantom connect
 
@@ -40,7 +40,9 @@ const opts = {
   preflightCommitment: "confirmed", // can also "finalized"
 };
 
-function App() {
+export default function Demo() {
+  const [showPopup, setShowPopup] = useState(true);
+
   const [output, setOutput] = useState("");
   const [walletAddress, setWalletAddress] = useState(null);
   const [inputData, setInputData] = useState({
@@ -177,7 +179,12 @@ function App() {
       console.log(response);
 
       // console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
-      const subscriptionAddress = await getSubscriptionKey(connection, payee, amount, duration);
+      const subscriptionAddress = await getSubscriptionKey(
+        connection,
+        payee,
+        amount,
+        duration
+      );
 
       setOutput(
         <>
@@ -285,17 +292,25 @@ function App() {
   };
 
   const sendSend = async () => {
-
     setButtonState((values) => ({ ...values, send: true }));
-    let { subscriptionAddress, newOwner} = inputData.sendOwner;
+    let { subscriptionAddress, newOwner } = inputData.sendOwner;
     subscriptionAddress = new PublicKey(subscriptionAddress);
     newOwner = new PublicKey(newOwner);
     const { provider, connection } = getProvider();
 
     try {
-
-      const createIx = await getCreateAtaInstruction(connection, subscriptionAddress, newOwner, new PublicKey(walletAddress));
-      const sendIx = await getSendInstruction(connection, subscriptionAddress, newOwner, new PublicKey(walletAddress));
+      const createIx = await getCreateAtaInstruction(
+        connection,
+        subscriptionAddress,
+        newOwner,
+        new PublicKey(walletAddress)
+      );
+      const sendIx = await getSendInstruction(
+        connection,
+        subscriptionAddress,
+        newOwner,
+        new PublicKey(walletAddress)
+      );
 
       const tx = new Transaction({
         feePayer: new PublicKey(walletAddress),
@@ -323,11 +338,9 @@ function App() {
       setOutput("Error occurred. Check browser logs.");
       setButtonState((values) => ({ ...values, send: false }));
     }
-
   };
 
   const showOwner = async () => {
-
     setButtonState((values) => ({ ...values, owner: true }));
     let { subscriptionAddress, newOwner } = inputData.sendOwner;
 
@@ -342,33 +355,34 @@ function App() {
       let output = <h3>No owner.</h3>;
       if (mint != null) {
         const tokenHolder = await findTokenHolder(connection, mint);
-        output = 
+        output = (
           <>
             <h3>Address input is not owner.</h3>
             <p>Owner: {tokenHolder.toBase58()}</p>
-          </>;
+          </>
+        );
         if (newOwner.toBase58() == tokenHolder.toBase58()) {
-          output = 
+          output = (
             <>
               <h3>Address input is owner.</h3>
               <p>Owner: {tokenHolder.toBase58()}</p>
-            </>;
+            </>
+          );
         }
       }
-      
+
       setOutput(output);
       setButtonState((values) => ({ ...values, owner: false }));
-
     } catch (err) {
       console.log(err);
-      setOutput("Subscription expired, invalid inputs, or other error occurred. Check browser logs.");
+      setOutput(
+        "Subscription expired, invalid inputs, or other error occurred. Check browser logs."
+      );
       setButtonState((values) => ({ ...values, owner: false }));
     }
-
   };
 
   const showMetadata = async () => {
-
     setButtonState((values) => ({ ...values, metadata: true }));
     let { subscriptionAddress } = inputData.metadataActive;
     subscriptionAddress = new PublicKey(subscriptionAddress);
@@ -377,9 +391,20 @@ function App() {
     try {
       const subAccount = await connection.getAccountInfo(subscriptionAddress);
       const subData = unpackSubscription(subAccount.data);
-      const { active, depositVault, depositMint, payee, amount, duration, mint, nextRenewTime } = subData;
+      const {
+        active,
+        depositVault,
+        depositMint,
+        payee,
+        amount,
+        duration,
+        mint,
+        nextRenewTime,
+      } = subData;
 
-      const depositVaultBalance = await connection.getTokenAccountBalance(depositVault);
+      const depositVaultBalance = await connection.getTokenAccountBalance(
+        depositVault
+      );
 
       setOutput(
         <>
@@ -396,24 +421,62 @@ function App() {
         </>
       );
       setButtonState((values) => ({ ...values, metadata: false }));
-
     } catch (err) {
       console.log(err);
       setOutput("Subscription expired or error occurred. Check browser logs.");
       setButtonState((values) => ({ ...values, metadata: false }));
     }
-
   };
 
-
   return (
-    <div>
-      <div className="top-bar">
-        <div className="title">
-          <img className="logo" src={logo} />
-          <h1 className="logo-text">Buoyant Demo App</h1>
+    <div className={styles.wrapper}>
+      <Head>
+        <meta charset="utf-8" />
+        <link rel="icon" href="%PUBLIC_URL%/images/squid_apple.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Buoyant Demo App</title>
+      </Head>
+      {showPopup && (
+        <div className={styles.popup}>
+          <h4>Notice!</h4>
+          <p>
+            This is a work in progress. Make sure you've switched to devnet in
+            your wallet. Make sure you have tokens from the designated mint when
+            depositing. If you run into any trouble, please dm us on{" "}
+            <a href="https://twitter.com/buoyantprotocol" target="_blank">
+              {" "}
+              Twitter{" "}
+            </a>{" "}
+            or submit an issue on our
+            <a
+              href="https://github.com/IlliniBlockchain/buoyant"
+              target="_blank"
+            >
+              {" "}
+              Github
+            </a>
+            .
+          </p>
+          <p>
+            Buoyant is not an app in itself, but a protocol to be built upon.
+            We've created a brief control panel for people to demo
+            functionality. Enjoy!
+          </p>
+          <button
+            onClick={() => {
+              setShowPopup(false);
+            }}
+          >
+            Close
+          </button>
         </div>
-        <div className="connect-box">
+      )}
+      <div className={styles.topBar}>
+        <div className={styles.title}>
+          <img className={styles.logo} src={"./images/squid_apple.png"} />
+          <h1 className={styles.logoText}>Buoyant Demo App</h1>
+        </div>
+        <div className={styles.connectBox}>
           {walletAddress === null ? (
             <ActionButton
               label={"Connect Wallet"}
@@ -421,7 +484,7 @@ function App() {
               clickHandler={connectWallet}
             />
           ) : (
-            <h3 className="wallet-address">
+            <h3 className={styles.walletAddress}>
               {walletAddress.slice(0, 4) +
                 "..." +
                 walletAddress.slice(-4, walletAddress.length)}
@@ -430,10 +493,10 @@ function App() {
         </div>
       </div>
 
-      <div className="App">
-        <div className="left-box">
-          <div className="left-input-box">
-            <div className="initialize-box panel">
+      <div className={styles.app}>
+        <div className={styles.leftBox}>
+          <div className={styles.leftInputBox}>
+            <div className={styles.initializeBox + " " + styles.panel}>
               <input
                 name="initialize.payee"
                 type="text"
@@ -476,7 +539,7 @@ function App() {
               />
             </div>
 
-            <div className="deposit-box panel">
+            <div className={styles.depositBox + " " + styles.panel}>
               <input
                 name="depositWithdraw.subscriptionAddress"
                 type="text"
@@ -491,22 +554,16 @@ function App() {
                 onChange={inputChange}
                 placeholder={"amount"}
               />
-              <div className="two-btn-box">
+              <div className={styles.twoBtnBox}>
                 <ActionButton
                   label={"Deposit"}
                   loading={buttonState.deposit}
                   clickHandler={sendDeposit}
                 />
-                <button>
-                  {buttonState.withdraw ? (
-                    <img className="loading" src={loading} />
-                  ) : (
-                    "Withdraw"
-                  )}
-                </button>
+                <button className={styles.btnDead}>Withdraw</button>
               </div>
             </div>
-            <div className="renew-box panel">
+            <div className={styles.renewBox + " " + styles.panel}>
               <input
                 name="renew.subscriptionAddress"
                 type="text"
@@ -522,8 +579,8 @@ function App() {
             </div>
           </div>
 
-          <div className="right-input-box">
-            <div className="send-box panel">
+          <div className={styles.rightInputBox}>
+            <div className={styles.sendBox + " " + styles.panel}>
               <input
                 name="sendOwner.subscriptionAddress"
                 type="text"
@@ -538,7 +595,7 @@ function App() {
                 onChange={inputChange}
                 placeholder={"owner"}
               />
-              <div className="two-btn-box">
+              <div className={styles.twoBtnBox}>
                 <ActionButton
                   label={"Send"}
                   loading={buttonState.send}
@@ -552,7 +609,7 @@ function App() {
               </div>
             </div>
 
-            <div className="metadata-box panel">
+            <div className={styles.metadataBox + " " + styles.panel}>
               <input
                 name="metadataActive.subscriptionAddress"
                 type="text"
@@ -569,12 +626,11 @@ function App() {
           </div>
         </div>
 
-        <div className="right-box">
-          <p className="output">{output}</p>
+        <div className={styles.rightBox}>
+          <h3>Output:</h3>
+          <p className={styles.output}>{output}</p>
         </div>
       </div>
     </div>
   );
 }
-
-export default App;
