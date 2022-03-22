@@ -2,16 +2,45 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "../styles/Home.module.css";
+import { useState, useEffect } from "react";
 
 export default function Home() {
+
+  const [sr, sg, sb] = [4, 113, 166]; // alt [88, 209, 251]
+  // ending RGB
+  const [er, eg, eb] = [0, 30, 44]; // alt [0, 0, 0]
+  // duration RGB (how much to change in total from current scroll position)
+  const [dr, dg, db] = [er - sr, eg - sg, eb - sb];
+  // global variables
+  const [ bgColor, setBgColor ] = useState(`${sr}, ${sg}, ${sb}`);
+
+  function getScrollPercent(scrollPos) {
+      const { documentElement: h, body: b } = document;
+      const perc = (scrollPos || b.scrollTop) / ((h.scrollHeight || b.scrollHeight ) - h.clientHeight);
+      return Math.sqrt(perc); // makes the scroll darkness get darker faster
+  }
+
+  function updateBgColor(scrollPos) {
+      const perc = Math.min(Math.max(0.05, getScrollPercent(scrollPos)), 1); // total scrolled %
+      // new RGB
+      const [r, g, b] = [sr + dr * perc, sg + dg * perc, sb + db * perc].map(Math.round);
+      setBgColor(`${r}, ${g}, ${b}`);
+  }
+
+  useEffect(() => {
+    document.addEventListener('scroll', () => {
+      updateBgColor(window.scrollY)
+    });
+  }, [])
+
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.wrapper} style={{backgroundColor: `rgb(${bgColor})`}}>
       <Head>
         <title>Buoyant Protocol</title>
         <link rel="icon" type="image/x-icon" href="./images/squid_apple.png"/>
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/> 
-        <meta charset="UTF-8"/>
+        <meta charSet="UTF-8"/>
 
         <meta name="description" content="Buoyant is a protocol for on-chain subscriptions built on Solana."/>
         <meta name="keywords" content="Crypto, Subscription, Solana, Tradable, NFT, Token, Protocol, Blockchain, Payments"/>
@@ -21,10 +50,6 @@ export default function Home() {
         {/* <!-- nofollow: tells bots not to crawl links on the page, and that no endorsement is implied --> */}
         <meta name="robots" content="index, nofollow"/>
         
-        <link rel="preconnect" href="https://fonts.googleapis.com"/>
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin/>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@300;400;500;600&family=Roboto+Mono:wght@300;400;500;600&display=swap" rel="stylesheet"/> 
-
         {/* <!-- SEO meta tags --> */}
         <meta name="twitter:card" content="Stay afloat. Buoyant is a base protocol for recurring payments built on Solana." />
         <meta name="twitter:site" content="@buoyantprotocol" />
