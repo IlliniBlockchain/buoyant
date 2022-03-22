@@ -17,7 +17,8 @@ import {
   unpackSubscription,
   findTokenHolder,
   getCreateAtaInstruction,
-  getSendInstruction
+  getSendInstruction,
+  getSubscriptionKey
 } from "./utils";
 import ActionButton from "./ActionButton";
 
@@ -176,16 +177,20 @@ function App() {
       console.log(response);
 
       // console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+      const subscriptionAddress = await getSubscriptionKey(connection, payee, amount, duration);
 
       setOutput(
-        <a
-          href={
-            "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
-          }
-          target="_blank"
-        >
-          Successful initialization. Link to transaction on explorer
-        </a>
+        <>
+          <a
+            href={
+              "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
+            }
+            target="_blank"
+          >
+            Successful initialization. Link to transaction on explorer
+          </a>
+          <p>Subscription address: {subscriptionAddress.toBase58()}</p>
+        </>
       );
       setButtonState((values) => ({ ...values, initialize: false }));
     } catch (err) {
@@ -372,7 +377,7 @@ function App() {
     try {
       const subAccount = await connection.getAccountInfo(subscriptionAddress);
       const subData = unpackSubscription(subAccount.data);
-      const { active, depositVault, depositMint, payee, amount, duration, nextRenewTime } = subData;
+      const { active, depositVault, depositMint, payee, amount, duration, mint, nextRenewTime } = subData;
 
       const depositVaultBalance = await connection.getTokenAccountBalance(depositVault);
 
@@ -380,6 +385,7 @@ function App() {
         <>
           <h3>Subscription Metadata</h3>
           <p>Active: {active.toString()}</p>
+          <p>Mint: {mint == null ? "null" : mint.toBase58()}</p>
           <p>depositVault: {depositVault.toBase58()}</p>
           <p>depositVault balance: {depositVaultBalance.value.amount}</p>
           <p>depositMint: {depositMint.toBase58()}</p>

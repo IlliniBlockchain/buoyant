@@ -21,6 +21,43 @@ const { Buffer } = require("buffer");
 
 const programId = new PublicKey("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf");
 
+const getSubscriptionKey = async (connection, payee, amount, duration) => {
+
+  // get counter PDA
+  const [counterKey, counterBump] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from("subscription_counter"),
+      payee.toBuffer(),
+      Buffer.from(new Uint8Array(new BN(amount).toArray("le", 8))),
+      Buffer.from(new Uint8Array(new BN(duration).toArray("le", 8))),
+    ],
+    programId
+  );
+
+  // get count
+  const account = await connection.getAccountInfo(counterKey);
+  const count =
+    account == null || account.data.length == 0
+      ? new BN(0)
+      : new BN(account.data, "le").subn(1);
+  console.log("count:", count);
+
+  // get subscriptions metadata PDA
+  // "subscription_metadata", user pubkey, payee
+  const [subKey, subBump] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from("subscription_metadata"),
+      payee.toBuffer(),
+      Buffer.from(new Uint8Array(new BN(amount).toArray("le", 8))),
+      Buffer.from(new Uint8Array(new BN(duration).toArray("le", 8))),
+      Buffer.from(new Uint8Array(count.toArray("le", 8))),
+    ],
+    programId
+  );
+
+  return subKey;
+}
+
 const unpackSubscription = (data) => {
 
   const active = data[0] === 1;
@@ -572,4 +609,4 @@ const getSendInstruction = async (connection, subKey, newOwner, user) => {
 
 }
 
-module.exports = { getInitializeInstruction, getDepositInstruction, getRenewInstruction, getCreateAtaInstruction, getSendInstruction, unpackSubscription, findTokenHolder };
+module.exports = { getInitializeInstruction, getDepositInstruction, getRenewInstruction, getCreateAtaInstruction, getSendInstruction, unpackSubscription, findTokenHolder, getSubscriptionKey };
