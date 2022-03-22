@@ -446,7 +446,9 @@ export default function Demo() {
           <p>
             This is a work in progress. Make sure you have switched to devnet in
             your wallet. Make sure you have tokens from the designated mint when
-            depositing. If you run into any trouble, please dm us on{" "}
+            depositing. Time units are denoted in seconds, token units in their lowest decimal denomination.
+          </p>
+          <p>If you run into any trouble, please dm us on{" "}
             <a
               href="https://twitter.com/buoyantprotocol"
               target="_blank"
