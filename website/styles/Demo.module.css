@@ -167,6 +167,11 @@
   /* background-color: rgb(255, 15, 22); */
 }
 
+.btnDead {
+  background-color: gray !important;
+  text-decoration: line-through;
+}
+
 .twoBtnBox {
   display: flex;
   justify-content: space-between;

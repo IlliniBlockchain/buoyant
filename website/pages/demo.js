@@ -560,13 +560,7 @@ export default function Demo() {
                   loading={buttonState.deposit}
                   clickHandler={sendDeposit}
                 />
-                <button>
-                  {buttonState.withdraw ? (
-                    <img className={styles.loading} src={loading} />
-                  ) : (
-                    "Withdraw"
-                  )}
-                </button>
+                <button className={styles.btnDead}>Withdraw</button>
               </div>
             </div>
             <div className={styles.renewBox + " " + styles.panel}>
