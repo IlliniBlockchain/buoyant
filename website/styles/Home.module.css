@@ -1,0 +1,312 @@
+
+
+.comingSoon {
+  margin-top: 300px;
+  text-align: center;
+}
+
+.wrapper {
+  overflow-x: hidden;
+}
+
+.nav {
+  height: 100px;
+  padding-bottom: 10px;
+  background-image: linear-gradient(rgb(88, 209, 251), rgba(0, 0, 0, 0));
+  display: flex;
+  justify-content: space-between;
+}
+
+.nav div {
+  width: 350px;
+}
+
+.leftNav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.homeLink {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+}
+
+.logoText {
+  margin: 0;
+  margin-left: 15px;
+  padding: 15px 0;
+  vertical-align: middle;
+  font-family: var(--font-logo);
+  
+  font-weight: lighter;
+  /* text-transform: uppercase; */
+  /* letter-spacing: 5px; */
+}
+
+.middleNav {
+  margin: auto;
+  width: 400px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.3em;
+}
+
+.middleNav a {
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  transition: 0.1s;
+}
+
+.middleNav a:hover {
+  opacity: 0.5;
+}
+
+.rightNav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.appBtn {
+  border: 1px solid rgb(0, 59, 88);
+  background-color: rgb(4, 113, 166);
+}
+
+.appBtn:hover {
+  background-color: rgb(0, 59, 88);
+}
+
+.center {
+  max-width: 90%;
+  width: 1080px;
+  min-height: 650px;
+  margin: auto;
+  margin-top: 35px;
+  margin-bottom: 175px;
+  text-align: center;
+  position: relative;
+}
+
+.leftImg {
+  /* float: left; */
+  left: 0;
+}
+
+.rightImg {
+  /* float: right; */
+  right: 0;
+  top: -50px;
+}
+
+.middleImg {
+  margin: auto;
+  left: 50%;
+  top: -50px;
+  transform: translate(-50%, 0%);
+}
+
+.rightText {
+  width: 70%;
+  text-align: right;
+  float: right;
+}
+.middleText {
+  /* text-align: center;*/
+  width: 100%;
+  margin: auto;
+}
+
+.leftText {
+  width: 70%;
+  text-align: left;
+  left: 0;
+}
+
+.bgFish {
+  opacity: 0.5;
+  position: absolute;
+  height: 650px;
+  width: auto;
+  z-index: -1;
+}
+
+.buildBtn {
+  border: 1px solid rgb(0, 30, 44);
+  background-color: rgb(0, 59, 88);
+}
+
+.buildBtn:hover {
+  background-color: rgb(0, 30, 44);
+}
+
+.banner {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: linear-gradient(330deg, rgb(88, 209, 251), rgba(0, 0, 0, 0));
+}
+
+.threeBlocks {
+  margin-top: 50px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.block {
+  background-image: linear-gradient(180deg, rgba(0, 15, 22, 0.8), rgba(0, 15, 22, 0.4));
+  width: 32%;
+  padding: 50px 30px;
+  border-radius: 20px;
+}
+
+.block h3 {
+  font-size: 1.7em;
+}
+
+.block img {
+  width: auto;
+  height: 80px;
+}
+
+.block p {
+  font-size: 1.25em;
+}
+
+.contactBox {
+  max-width: 1080px;
+  border-radius: 20px;
+  height: fit-content;
+  padding: 75px 100px;
+  margin: auto;
+  margin-bottom: 150px;
+  text-align: center;
+  background-image: linear-gradient(180deg, rgba(0, 15, 22, 0.6), rgba(0, 15, 22, 0.2));
+}
+
+.h3Link {
+  color: white;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: 0.1s;
+}
+.h3Link:hover {
+  opacity: 1;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 300px;
+  background-color: rgb(0, 15, 22);
+  padding: 50px 20%;
+}
+
+.footerLeft {
+  width: 500px;
+}
+
+.footerLogo {
+  display: flex;
+  align-items: center;
+}
+
+.footerContact {
+  opacity: 0.5;
+}
+
+.footerHeader {
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+/* basically copy middle-nav */
+.footerLinks {
+  width: fit-content;
+  height: 150px;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  font-size: 1.2em;
+}
+
+.footerLinks a {
+  text-decoration: none;
+  color: white;
+  font-weight: normal;
+  transition: 0.1s;
+}
+
+.footerLinks a:hover {
+  opacity: 0.5;
+}
+
+@media only screen and (max-width: 800px) {
+  .homeLink {
+      margin: auto;
+  }
+  .middleNav, .rightNav {
+      display: none;
+  }
+
+  .center {
+      max-width: 95%;
+  }
+  .rightText, .leftText {
+      width: 100%;
+      padding: 0 15px;
+  }
+  .leftImg {
+      left: -35%;
+  }
+
+  .threeBlocks {
+      flex-direction: column;
+      align-items: center;
+      padding: 0 15px;
+  }
+  .block {
+      width: 100%;
+      margin-bottom: 25px;
+  }
+
+  .contactBox {
+      width: 85%;
+      padding: 50px 15px;
+  }
+
+  .footer {
+      flex-direction: column;
+      align-items: center;
+  }
+  .footerLogo {
+      justify-content: center;
+  }
+  .footerContact {
+      text-align: center;
+  }
+  .footerHeader {
+      display: none;
+  }
+  .footerLinks {
+      width: 300px;
+      height: fit-content;
+      margin-top: 50px;
+      margin-bottom: 50px;
+      flex-direction: row;
+      justify-content: space-around;
+  }
+}
