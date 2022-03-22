@@ -2,6 +2,26 @@
 
 > "Subs not dubs."
 
+## Demo (Local)
+
+To demo our app's functionality, we've created a basic control panel/dashboard where you can test out creating and renewing subscriptions. At the moment we haven't connected it to our website quite yet, so we'll have to make do with running it locally! To do so, run the following commands:
+
+```
+// clone the repository
+git clone https://github.com/IlliniBlockchain/buoyant.git
+
+// go into the demo app's directory
+cd buoyant/demo-app
+
+// install dependencies
+npm install
+
+// run locally
+npm run start
+```
+
+## Project Overview
+
 ### Description
 A base protocol implementing recurring payments.
 
