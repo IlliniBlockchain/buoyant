@@ -47,10 +47,10 @@ export default function Demo() {
   const [walletAddress, setWalletAddress] = useState(null);
   const [inputData, setInputData] = useState({
     initialize: {
-      payee: "5PWsJe6h2kVEYPkdhhZZgftQfkPbkB3DTooQZR2AfkFb",
+      payee: "",
       amount: "",
       duration: "",
-      depositMint: "9cMVucmpfyyuUGhN4KgtpS1NcFxcU18LL8KkycgnZnMM",
+      depositMint: "",
       startAmount: "",
     },
     depositWithdraw: {
