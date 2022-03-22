@@ -193,6 +193,7 @@ export default function Demo() {
               "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
             }
             target="_blank"
+            rel="noreferrer"
           >
             Successful initialization. Link to transaction on explorer
           </a>
@@ -237,6 +238,7 @@ export default function Demo() {
             "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
           }
           target="_blank"
+          rel="noreferrer"
         >
           Successful deposit. Link to transaction on explorer
         </a>
@@ -279,6 +281,7 @@ export default function Demo() {
             "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
           }
           target="_blank"
+          rel="noreferrer"
         >
           Successful renew. Link to transaction on explorer
         </a>
@@ -328,6 +331,7 @@ export default function Demo() {
             "https://explorer.solana.com/tx/" + signature + "?cluster=devnet"
           }
           target="_blank"
+          rel="noreferrer"
         >
           Successful send. Link to transaction on explorer
         </a>
@@ -440,10 +444,14 @@ export default function Demo() {
         <div className={styles.popup}>
           <h4>Notice!</h4>
           <p>
-            This is a work in progress. Make sure you've switched to devnet in
+            This is a work in progress. Make sure you have switched to devnet in
             your wallet. Make sure you have tokens from the designated mint when
             depositing. If you run into any trouble, please dm us on{" "}
-            <a href="https://twitter.com/buoyantprotocol" target="_blank">
+            <a
+              href="https://twitter.com/buoyantprotocol"
+              target="_blank"
+              rel="noreferrer"
+            >
               {" "}
               Twitter{" "}
             </a>{" "}
@@ -451,6 +459,7 @@ export default function Demo() {
             <a
               href="https://github.com/IlliniBlockchain/buoyant"
               target="_blank"
+              rel="noreferrer"
             >
               {" "}
               Github
@@ -459,7 +468,7 @@ export default function Demo() {
           </p>
           <p>
             Buoyant is not an app in itself, but a protocol to be built upon.
-            We've created a brief control panel for people to demo
+            We have created a brief control panel for people to demo
             functionality. Enjoy!
           </p>
           <button
