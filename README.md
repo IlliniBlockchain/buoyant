@@ -4,14 +4,14 @@
 
 ## Demo (Local)
 
-To demo our app's functionality, we've created a basic control panel/dashboard where you can test out creating and renewing subscriptions. At the moment we haven't connected it to our website quite yet, so we'll have to make do with running it locally! To do so, run the following commands:
+To demo our app's functionality, we've created a basic control panel/dashboard where you can test out creating and renewing subscriptions. To run it locally, run the following commands:
 
 ```
 // clone the repository
 git clone https://github.com/IlliniBlockchain/buoyant.git
 
 // go into the demo app's directory
-cd buoyant/demo-app
+cd buoyant/website
 
 // install dependencies
 npm install
