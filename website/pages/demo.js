@@ -436,6 +436,41 @@ export default function Demo() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Buoyant Demo App</title>
       </Head>
+      {showPopup && (
+        <div className={styles.popup}>
+          <h4>Notice!</h4>
+          <p>
+            This is a work in progress. Make sure you've switched to devnet in
+            your wallet. Make sure you have tokens from the designated mint when
+            depositing. If you run into any trouble, please dm us on{" "}
+            <a href="https://twitter.com/buoyantprotocol" target="_blank">
+              {" "}
+              Twitter{" "}
+            </a>{" "}
+            or submit an issue on our
+            <a
+              href="https://github.com/IlliniBlockchain/buoyant"
+              target="_blank"
+            >
+              {" "}
+              Github
+            </a>
+            .
+          </p>
+          <p>
+            Buoyant is not an app in itself, but a protocol to be built upon.
+            We've created a brief control panel for people to demo
+            functionality. Enjoy!
+          </p>
+          <button
+            onClick={() => {
+              setShowPopup(false);
+            }}
+          >
+            Close
+          </button>
+        </div>
+      )}
       <div className={styles.topBar}>
         <div className={styles.title}>
           <img className={styles.logo} src={"./images/squid_apple.png"} />
@@ -598,10 +633,10 @@ export default function Demo() {
         </div>
 
         <div className={styles.rightBox}>
+          <h3>Output:</h3>
           <p className={styles.output}>{output}</p>
         </div>
       </div>
     </div>
-
   );
 }
