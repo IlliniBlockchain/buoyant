@@ -167,6 +167,10 @@
   /* background-color: rgb(255, 15, 22); */
 }
 
+.deadInput {
+  text-decoration: line-through;
+}
+
 .btnDead {
   background-color: gray !important;
   text-decoration: line-through;

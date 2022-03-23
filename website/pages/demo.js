@@ -436,7 +436,7 @@ export default function Demo() {
     <div className={styles.wrapper}>
       <Head>
         <meta charset="utf-8" />
-        <link rel="icon" href="%PUBLIC_URL%/images/squid_apple.png" />
+        <link rel="icon" href="./images/squid_apple.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Buoyant Demo App</title>
       </Head>
@@ -537,6 +537,7 @@ export default function Demo() {
                 placeholder={"depositMint"}
               />
               <input
+                className={styles.deadInput}
                 name="initialize.startAmount"
                 type="text"
                 value={inputData.initialize.startAmount}
