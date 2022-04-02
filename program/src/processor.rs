@@ -52,6 +52,9 @@ impl Processor {
             SubscriptionInstruction::Close {} => {
                 msg!("Instruction: Close");
             }
+            SubscriptionInstruction::Registry { count } => {
+                msg!("Instruction: Registry");
+            }
         }
         
         Ok(())

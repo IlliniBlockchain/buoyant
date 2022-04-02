@@ -91,4 +91,13 @@ pub enum SubscriptionInstruction {
     ///   2. `[]` system program
     ///
     Close {},
+
+    /// Creates and maintains a registry containing subscription data for active subscriptions.
+    /// 
+    /// Accounts expected by this instruction:
+    /// 
+    ///     0. '[writable, signer]' user
+    ///     1. '[writable]' subscription metadata
+    ///     2. '[writable]' 
+    Registry { count: u64 },
 }
