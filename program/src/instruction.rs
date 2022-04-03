@@ -97,7 +97,10 @@ pub enum SubscriptionInstruction {
     /// Accounts expected by this instruction:
     /// 
     ///     0. '[writable, signer]' user
-    ///     1. '[writable]' subscription metadata
-    ///     2. '[writable]' 
+    ///     1. '[writable]' registry
+    ///     2. '[]' subscription metadata
+    ///     3. '[]' system program
+    ///     4. '[]' sysvar rent program
+    /// 
     Registry { count: u64 },
 }

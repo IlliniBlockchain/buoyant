@@ -12,8 +12,10 @@ pub enum SubscriptionError {
     InvalidReceiver,
     #[error("Already expired.")]
     AlreadyExpired,
-    #[error("No subscription data.")]
+    #[error("Subscription not initialized. No data.")]
     NoData,
+    #[error("Subscription already present in registry.")]
+    DuplicateReg,
 }
 
 impl From<SubscriptionError> for ProgramError {
