@@ -42,7 +42,9 @@ pub fn process_registry(
     check_program_id(sysvar_rent_ai, &rent::id())?;
 
     //get current registry count
-    let registry_count: u64 = registry_ai.data_len() / 48;
+    let mut registry_data = registry_ai.try_borrow_mut_data()?;
+    let registry_length = registry_ai.data_len();
+    let mut registry_count: u64 = registry_length / 48;
 
     //check registry PDA
     let registry_seeds = &[
@@ -62,45 +64,42 @@ pub fn process_registry(
     let amount = subscription.amount;
     let duration = subscription.duration;
 
+    //convert all existing data to bytes
+    let mut payee_data = payee.as_ref();
+    let mut amount_data = &amount.to_le_bytes();
+    let mut duration_data = &duration.to_le_bytes();
+
     //check subscription PDA
     let subscription_seeds = &[
         b"subscription_metadata",
-        payee.as_ref(),
-        &amount.to_le_bytes(),
-        &duration.to_le_bytes(),
+        payee_data,
+        amount_data,
+        duration_data,
         &count.to_le_bytes(),
     ];
 
     check_pda(subscription_ai, subscription_seeds, program_id)?;
 
-    //convert all existing and new data to bytes
-    let mut existing_data = registry_ai.try_borrow_mut_data()?;
-    let existing_length = registry_ai.data_len();
-
-    let mut payee_data = payee.as_ref();
-    let mut amount_data = &amount.to_le_bytes();
-    let mut duration_data = &duration.to_le_bytes();
-
     //compress payee, amount, duration to one array
     let mut new_data: [u8, 48];
 
-    for i in 0..(0+32-1) {
+    for i in 0..32 {
         new_data[i] = payee_data[i];
     }
 
-    for i in 32..(32+8-1) {
+    for i in 32..(32+8) {
         new_data[i] = amount_data[i - 32];
     }
 
-    for i in 40..(40+8-1) {
+    for i in 40..(40+8) {
         new_data[i] = duration_data[i - 40];
     }
 
     //check if new subscription already exists in registry
     for i in 0..registry_count {
         let mut duplicate = true;
-        for j in 0..47 {
-            if new_data[j] != existing_data[i*48 + j] {
+        for j in 0..48 {
+            if new_data[j] != registry_data[i*48 + j] {
                 duplicate = false;
             }
         }
@@ -109,21 +108,24 @@ pub fn process_registry(
         }
     }
 
+    //find existing lamports and set to zero
     let existing_lamports = registry_ai.lamports();
     **registry_ai.lamports.borrow_mut() = 0;
 
-    let caller_starting_lamports = caller_ai.lamports();
-            **caller_ai.lamports.borrow_mut() = caller_starting_lamports
-                .checked_add(subscription_ai.lamports())
-                .ok_or(TokenError::Overflow)?;
-            **subscription_ai.lamports.borrow_mut() = 0;
+    //increment registry count and change seeds
+    registry_count += 1;
+    let registry_seeds = &[
+        b"subscription_registry",
+        &registry_count.to_le_bytes(),
+    ]
 
+    //create new registry account with more space for data
     invoke_signed(
-        let new_length = existing_length + 48;
+        let new_length = registry_length + 48;
         &system_instruction::create_account(
             user_ai.key, 
             registry_ai.key, 
-            rent::Rent::get()?.minimum_balance(new_length - existing_length), 
+            rent::Rent::get()?.minimum_balance(new_length - registry_length), 
             new_length as u64, 
             program_id,
         ), 
@@ -132,9 +134,16 @@ pub fn process_registry(
             registry_ai.clone();
             system_program_ai.clone();
         ], 
-        signers_seeds: &[&[&[u8]]])
+        &[registry_seeds],
     );
 
+    //add the lamports from before adding this space
+    let user_added_lamports = registry_ai.lamports();
+    **registry_ai.lamports.borrow_mut() = user_added_lamports
+        .checked_add(existing_lamports)
+        .ok_or(TokenError::Overflow)?;
+    
+    //loop through and add data
 
     Ok(())
 }
