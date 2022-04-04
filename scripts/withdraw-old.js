@@ -3,10 +3,8 @@ const {
   sendAndConfirmTransaction,
   Keypair,
   Transaction,
-  SystemProgram,
   PublicKey,
   TransactionInstruction,
-  SYSVAR_RENT_PUBKEY,
 } = require('@solana/web3.js')
 const {
   Token,
@@ -21,51 +19,80 @@ const { user, mintKey } = require('./utils/keys')
 const programId = new PublicKey('Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf')
 const connection = new Connection('https://api.devnet.solana.com/')
 
-const renewInstruction = (
-  callerKey,
-  subKey,
-  depositMint,
-  depositVault,
-  payeeKey,
-  payeeVault,
-  callerVault,
-  newMint,
-  payerNewVault,
-  payerOldVault,
-  count,
+function withdrawInstruction(
   payer,
-) => {
+  payerSubToken,
+  payerDepositToken,
+  depositVault,
+  subMetadata,
+  amount,
+  count,
+) {
   const accounts = [
-    { pubkey: callerKey, isSigner: true, isWritable: true },
-    { pubkey: subKey, isSigner: false, isWritable: true },
-    { pubkey: depositMint, isSigner: false, isWritable: false },
+    { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: payerSubToken, isSigner: false, isWritable: true },
+    { pubkey: payerDepositToken, isSigner: false, isWritable: true },
     { pubkey: depositVault, isSigner: false, isWritable: true },
-    { pubkey: payeeKey, isSigner: false, isWritable: false },
-    { pubkey: payeeVault, isSigner: false, isWritable: true },
-    { pubkey: callerVault, isSigner: false, isWritable: true },
-    { pubkey: newMint, isSigner: false, isWritable: true },
-    { pubkey: payerNewVault, isSigner: false, isWritable: true },
-    { pubkey: payerOldVault, isSigner: false, isWritable: false },
-    { pubkey: payer, isSigner: false, isWritable: false },
-    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    { pubkey: subMetadata, isSigner: false, isWritable: false },
     { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-    { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
   ]
 
   const idxBuffer = Buffer.from(new Uint8Array([3]))
-  const countBuffer = Buffer.from(
-    new Uint8Array(new BN(count).toArray('le', 8)),
-  )
-  const inputData = Buffer.concat([idxBuffer, countBuffer])
+  const amountBuffer = Buffer.from(new Uint8Array(new BN(amount).toArray('le', 8)))
+  const countBuffer = Buffer.from(new Uint8Array(new BN(count).toArray('le', 8)))
+  const inputData = Buffer.concat([idxBuffer, amountBuffer, countBuffer])
 
-  const instruction = new TransactionInstruction({
+  return new TransactionInstruction({
     keys: accounts,
     programId,
     data: inputData,
   })
+}
 
-  return instruction
+async function findWithdrawAccounts(
+  callerKey,
+  mintKey_,
+  payeeKey,
+  amount,
+  duration,
+  count,
+  payer,
+) {
+  const [subKey, subBump] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from('subscription_metadata'),
+      payeeKey.toBuffer(),
+      Buffer.from(new Uint8Array(new BN(amount).toArray('le', 8))),
+      Buffer.from(new Uint8Array(new BN(duration).toArray('le', 8))),
+      Buffer.from(new Uint8Array(new BN(count).toArray('le', 8))),
+    ],
+    programId,
+  )
+
+  // depositVault
+  const depositVault = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mintKey_,
+    subKey,
+    true,
+  )
+
+  // callerVault
+  const callerVault = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    mintKey,
+    callerKey,
+    true,
+  )
+
+  return {
+    subKey,
+    depositVault,
+    callerVault,
+    payer,
+  }
 }
 
 const findRenewAccounts = async (
@@ -93,7 +120,7 @@ const findRenewAccounts = async (
   const depositVault = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
-    mintKey_,
+    mintKey,
     subKey,
     true,
   )
@@ -199,7 +226,7 @@ const findRenewAccounts = async (
   }
 }
 
-const main = async () => {
+async function main() {
   const args = process.argv.slice(2)
   const payee = new PublicKey(args[0])
   const amount = parseInt(args[1])
@@ -228,7 +255,7 @@ const main = async () => {
     payerTemp,
   )
 
-  const renewIx = renewInstruction(
+  const withdrawIx = withdrawInstruction(
     caller.publicKey,
     subKey,
     mintKey,
@@ -244,7 +271,7 @@ const main = async () => {
   )
 
   const tx = new Transaction()
-  tx.add(renewIx)
+  tx.add(withdrawIx)
 
   const txid = await sendAndConfirmTransaction(connection, tx, [user], {
     skipPreflight: true,
@@ -256,9 +283,5 @@ const main = async () => {
 }
 
 main()
-  .then(() => {
-    console.log('Success')
-  })
-  .catch((e) => {
-    console.error(e)
-  })
+  .then(() => console.log('Success'))
+  .catch(console.error)

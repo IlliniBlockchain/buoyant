@@ -44,10 +44,10 @@ pub enum SubscriptionInstruction {
     ///
     ///   0. `[writable, signer]` payer
     ///   1. `[writable]` (PDA) payer subscription token account
-    ///   4. `[writable]` (PDA) payer deposit token account
-    ///   2. `[writable]` (PDA) deposit vault
-    ///   5. `[]` (PDA) subscription metadata
-    ///   6. `[]` token program for token transfers
+    ///   2. `[writable]` (PDA) payer deposit token account
+    ///   3. `[writable]` (PDA) deposit vault
+    ///   4. `[]` (PDA) subscription metadata
+    ///   5. `[]` token program for token transfers
     ///
     Withdraw { withdraw_amount: u64, count: u64 },
 
