@@ -3,7 +3,10 @@ use solana_program::{
     pubkey::Pubkey, 
     program_error::ProgramError,
     instruction::{AccountMeta, Instruction},
+    system_program,
+    sysvar,
 };
+use spl_associated_token_account;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub enum SubscriptionInstruction {
@@ -97,8 +100,47 @@ pub enum SubscriptionInstruction {
     Close {},
 }
 
+/// Creates an `Initialize` instruction.
+pub fn initialize(
+    program_pubkey: &Pubkey,
+    user_pubkey: &Pubkey,
+    counter_pubkey: &Pubkey,
+    subscription_pubkey: &Pubkey,
+    vault_pubkey: &Pubkey,
+    vault_mint_pubkey: &Pubkey,
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+) -> Result<Instruction, ProgramError> {
+
+    let data = SubscriptionInstruction::Initialize {
+        payee: *payee,
+        amount,
+        duration
+    };
+
+    let accounts = vec![
+        AccountMeta::new(*user_pubkey, true),
+        AccountMeta::new(*counter_pubkey, false),
+        AccountMeta::new(*subscription_pubkey, false),
+        AccountMeta::new(*vault_pubkey, false),
+        AccountMeta::new_readonly(*vault_mint_pubkey, false),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+    ];
+
+    Ok(Instruction {
+        program_id: *program_pubkey,
+        accounts,
+        data: data.try_to_vec().unwrap(),
+    })
+}
+
 /// Creates a `Withdraw` instruction.
 pub fn withdraw(
+    program_pubkey: &Pubkey,
     payer_pubkey: &Pubkey,
     destination_pubkey: &Pubkey,
     vault_pubkey: &Pubkey,
@@ -120,7 +162,7 @@ pub fn withdraw(
     ];
 
     Ok(Instruction {
-        program_id: *token_program_id,
+        program_id: *program_pubkey,
         accounts,
         data: data.try_to_vec().unwrap(),
     })
