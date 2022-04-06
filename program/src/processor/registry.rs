@@ -13,7 +13,7 @@ use spl_token::*;
 use crate::{
     utils::{check_program_id, check_writable, check_signer, check_pda},
     error::SubscriptionError,
-    state::Subscription,
+    state::{Subscription, Counter},
 };
 
 pub fn process_registry(
@@ -27,6 +27,8 @@ pub fn process_registry(
     let user_ai = next_account_info(accounts_iter)?;
     let registry_ai = next_account_info(accounts_iter)?;
     let subscription_ai = next_account_info(accounts_iter)?;
+    let updated_registry_ai = next_account_info(accounts_iter)?;
+    let counter_ai = next_account_info(accounts_iter)?;
 
     //get programs needed
     let system_program_ai = next_account_info(accounts_iter)?;
@@ -36,15 +38,34 @@ pub fn process_registry(
     check_signer(user_ai)?;
     check_writable(user_ai)?;
     check_writable(registry_ai)?;
+    check_writable(updated_registry_ai)?;
+    check_writable(counter_ai)?;
 
     //validate program ID
     check_program_id(system_program_ai, &system_program::id())?;
     check_program_id(sysvar_rent_ai, &rent::id())?;
 
-    //get current registry count
-    let mut registry_data = registry_ai.try_borrow_mut_data()?;
-    let registry_length = registry_ai.data_len();
-    let mut registry_count: u64 = registry_length / 48;
+    //check counter PDA
+    let counter_seeds = &[
+        b"registry_counter",
+    ];
+
+    check_pda(counter_ai, counter_seeds, program_id)?;
+
+    //get current registry count and length of the data
+    let registry_count: u64 = if counter_ai.data_len() == 0 {
+        0
+    } else {
+        let count_data = Counter::try_from_slice(&counter_ai.try_borrow_data()?)?;
+        count_data.count
+    }
+
+    let registry_length = registry_count * 48;
+
+    //check if new registry is initialized
+    if updated_registry_ai.data_len() != 0 {
+        return Err(ProgramError::AccountAlreadyInitialized.into());
+    }
 
     //check registry PDA
     let registry_seeds = &[
@@ -54,10 +75,18 @@ pub fn process_registry(
 
     check_pda(registry_ai, registry_seeds, program_id)?;
 
-    //get subscription parameters
+    //get the data from existing registry account
+    let mut registry_data = if registry_length == 0 {
+        0
+    } else {
+        registry_ai.try_borrow_mut_data()?
+    }
+
+    //check subscription initialization
     if subscription_ai.data_len() == 0 {
         return Err(SubscriptionError::NoData.into());
     }
+    
     let mut subscription = Subscription::try_from_slice(&subscription_ai.try_borrow_data()?)?;
 
     let payee = &subscription.payee;
@@ -108,42 +137,73 @@ pub fn process_registry(
         }
     }
 
-    //find existing lamports and set to zero
-    let existing_lamports = registry_ai.lamports();
+    //transfer lamports to updated registry account
+    let reg_lamports = registry_ai.lamports();
+    let up_reg_lamports = updated_registry_ai.lamports();
+    **updated_registry_ai.lamports.borrow_mut() = reg_lamports
+        .checked_add(up_reg_lamports)
+        .ok_or(TokenError::Overflow)?;
     **registry_ai.lamports.borrow_mut() = 0;
 
-    //increment registry count and change seeds
+
+    //increment registry count and initialize counter account if needed
+    if registry_count == 0 {
+        invoke_signed(
+            &system_instruction::create_account(
+                user_ai.key, 
+                counter_ai.key, 
+                rent::Rent::get()?.minimum_balance(8), 
+                8 as u64, 
+                program_id,
+            ), 
+            &[
+                user_ai.clone(),
+                counter_ai.clone(),
+                system_program_ai.clone(),
+            ], 
+            &[counter_seeds],
+        )?;
+    }
+    
+    //increment registry count seeds
     registry_count += 1;
     let registry_seeds = &[
         b"subscription_registry",
         &registry_count.to_le_bytes(),
-    ]
+    ];
 
     //create new registry account with more space for data
+    let new_length = registry_length + 48;
     invoke_signed(
-        let new_length = registry_length + 48;
         &system_instruction::create_account(
             user_ai.key, 
-            registry_ai.key, 
-            rent::Rent::get()?.minimum_balance(new_length - registry_length), 
+            updated_registry_ai.key, 
+            rent::Rent::get()?.minimum_balance(48), 
             new_length as u64, 
             program_id,
         ), 
         &[
-            user_ai.clone();
-            registry_ai.clone();
-            system_program_ai.clone();
+            user_ai.clone(),
+            updated_registry_ai.clone(),
+            system_program_ai.clone(),
         ], 
         &[registry_seeds],
     );
-
-    //add the lamports from before adding this space
-    let user_added_lamports = registry_ai.lamports();
-    **registry_ai.lamports.borrow_mut() = user_added_lamports
-        .checked_add(existing_lamports)
-        .ok_or(TokenError::Overflow)?;
     
     //loop through and add data
+    updated_registry_data = updated_registry_ai.try_borrow_mut_data()?;
+    
+    for i in 0..registry_length {
+        updated_registry_data[i] = registry_data[i];
+    }
+
+    for j in registry_length..new_length {
+        updated_registry_ai[j] = new_data[j - registry_length];
+    }
+
+    //increment counter account
+    let counter = Counter { registry_count };
+    counter.serialize(&mut *counter_ai.try_borrow_mut_data()?)?;
 
     Ok(())
 }

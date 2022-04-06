@@ -99,6 +99,8 @@ pub enum SubscriptionInstruction {
     ///     0. '[writable, signer]' user
     ///     1. '[writable]' registry
     ///     2. '[]' subscription metadata
+    ///     3. '[writable]' new registry
+    ///     4. '[writable]' counter
     ///     3. '[]' system program
     ///     4. '[]' sysvar rent program
     /// 
