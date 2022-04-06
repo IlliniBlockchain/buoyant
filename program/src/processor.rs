@@ -39,7 +39,7 @@ impl Processor {
             SubscriptionInstruction::Deposit { amount } => {
                 msg!("Instruction: Deposit");
                 msg!("amount: {}", amount);
-                deposit::deposit_to(accounts, amount)?;
+                deposit::process_deposit(accounts, amount)?;
             }
             SubscriptionInstruction::Withdraw { amount } => {
                 msg!("Instruction: Withdraw");
