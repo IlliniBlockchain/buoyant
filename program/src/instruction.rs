@@ -1,5 +1,12 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
+use solana_program::{
+    pubkey::Pubkey, 
+    program_error::ProgramError,
+    instruction::{AccountMeta, Instruction},
+    system_program,
+    sysvar,
+};
+use spl_associated_token_account;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub enum SubscriptionInstruction {
@@ -91,4 +98,72 @@ pub enum SubscriptionInstruction {
     ///   2. `[]` system program
     ///
     Close {},
+}
+
+/// Creates an `Initialize` instruction.
+pub fn initialize(
+    program_pubkey: &Pubkey,
+    user_pubkey: &Pubkey,
+    counter_pubkey: &Pubkey,
+    subscription_pubkey: &Pubkey,
+    vault_pubkey: &Pubkey,
+    vault_mint_pubkey: &Pubkey,
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+) -> Result<Instruction, ProgramError> {
+
+    let data = SubscriptionInstruction::Initialize {
+        payee: *payee,
+        amount,
+        duration
+    };
+
+    let accounts = vec![
+        AccountMeta::new(*user_pubkey, true),
+        AccountMeta::new(*counter_pubkey, false),
+        AccountMeta::new(*subscription_pubkey, false),
+        AccountMeta::new(*vault_pubkey, false),
+        AccountMeta::new_readonly(*vault_mint_pubkey, false),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+    ];
+
+    Ok(Instruction {
+        program_id: *program_pubkey,
+        accounts,
+        data: data.try_to_vec().unwrap(),
+    })
+}
+
+/// Creates a `Withdraw` instruction.
+pub fn withdraw(
+    program_pubkey: &Pubkey,
+    payer_pubkey: &Pubkey,
+    destination_pubkey: &Pubkey,
+    vault_pubkey: &Pubkey,
+    subscription_pubkey: &Pubkey,
+    token_program_id: &Pubkey,
+    amount: u64
+) -> Result<Instruction, ProgramError> {
+
+    let data = SubscriptionInstruction::Withdraw {
+        amount
+    };
+
+    let accounts = vec![
+        AccountMeta::new(*payer_pubkey, true),
+        AccountMeta::new(*destination_pubkey, false),
+        AccountMeta::new(*vault_pubkey, false),
+        AccountMeta::new_readonly(*subscription_pubkey, false),
+        AccountMeta::new_readonly(*token_program_id, false),
+    ];
+
+    Ok(Instruction {
+        program_id: *program_pubkey,
+        accounts,
+        data: data.try_to_vec().unwrap(),
+    })
 }

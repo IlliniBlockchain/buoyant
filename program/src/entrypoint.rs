@@ -32,6 +32,7 @@ mod test {
     };
 
     #[tokio::test]
+    #[ignore]
     async fn test_transaction() {
         let program_id = Pubkey::new_unique();
 
