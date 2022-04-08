@@ -1,6 +1,5 @@
 #![cfg(feature = "test-bpf")]
 
-mod instruction;
 
 use {
     solana_sdk::{signature::{Signer, Keypair}, transaction::Transaction},
@@ -8,7 +7,8 @@ use {
     solana_program::pubkey::Pubkey,
     solana_validator::test_validator::*,
     spl_token::native_mint,
-    spl_associated_token_account::get_associated_token_address
+    spl_associated_token_account::get_associated_token_address,
+    buoyant::instruction,
 };
 
 #[test]
