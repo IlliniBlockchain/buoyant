@@ -1,4 +1,4 @@
-use solana_client::rpc_client::RpcClient;
+use solana_client::{client_error::ClientError, rpc_client::RpcClient};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     program_error::ProgramError,
@@ -17,33 +17,69 @@ use spl_token;
 use std::error::Error;
 use std::str::FromStr;
 
+fn program_id() -> Pubkey {
+    Pubkey::from_str("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf").unwrap()
+}
+
 fn main() {
     println!("Started.");
     let rpc_client = RpcClient::new("https://api.devnet.solana.com");
 
-    let program_id = match Pubkey::from_str("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf") {
-        Ok(pubkey) => pubkey,
-        Err(_) => panic!(),
-    };
-
     let user = Keypair::new();
-    if let Ok(airdrop_sig) = request_air_drop(&rpc_client, &user.pubkey(), 1.0) {
+    println!("Requesting air drop...");
+    if let Ok(_) = request_air_drop(&rpc_client, &user.pubkey(), 1000000000) {
         println!("Airdrop finished.");
     }
-    let payee = &Keypair::new().pubkey();
+
+    let payee = &Pubkey::new_unique();
     let amount: u64 = 20;
     let duration: i64 = 30;
+    let deposit_mint = spl_token::native_mint::id();
 
+    let instruction = initialize_new(
+        &rpc_client,
+        &user.pubkey(),
+        &deposit_mint,
+        payee,
+        amount,
+        duration,
+    )
+    .unwrap();
+
+    let latest_blockhash = rpc_client.get_latest_blockhash().unwrap();
+
+    let transaction = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&user.pubkey()),
+        &[&user],
+        latest_blockhash,
+    );
+
+    println!("Sending tx...");
+    if let Ok(txid) = rpc_client.send_and_confirm_transaction(&transaction) {
+        println!("Tx confirmed:");
+        println!("https://explorer.solana.com/tx/{}?cluster=devnet", txid);
+    }
+
+    println!("Finished.");
+}
+
+pub fn get_counter_address(payee: &Pubkey, amount: u64, duration: i64) -> (Pubkey, u8) {
     let counter_seeds = &[
         b"subscription_counter",
         payee.as_ref(),
         &amount.to_le_bytes(),
         &duration.to_le_bytes(),
     ];
-    let (counter, _) = Pubkey::find_program_address(counter_seeds, &program_id);
+    Pubkey::find_program_address(counter_seeds, &program_id())
+}
 
-    // Find uninitialized subscription PDA
-    let count: u64 = 0;
+pub fn get_subscription_address(
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+    count: u64,
+) -> (Pubkey, u8) {
     let subscription_seeds = &[
         b"subscription_metadata",
         payee.as_ref(),
@@ -51,43 +87,63 @@ fn main() {
         &duration.to_le_bytes(),
         &count.to_le_bytes(),
     ];
-    let (sub, _) = Pubkey::find_program_address(subscription_seeds, &program_id);
+    Pubkey::find_program_address(subscription_seeds, &program_id())
+}
 
-    let mint = spl_token::native_mint::id(); // SPL token address
-    let vault = spl_associated_token_account::get_associated_token_address(&sub, &mint);
+pub fn get_subscription_count(
+    rpc_client: &RpcClient,
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+) -> Result<u64, ClientError> {
+    let (counter, _) = get_counter_address(payee, amount, duration);
+    let count: u64 = match rpc_client.get_account_data(&counter) {
+        Ok(data) => u64::from_le_bytes(data.try_into().unwrap()),
+        Err(_) => 0,
+    };
 
-    let instruction = initialize(
-        &program_id,
-        &user.pubkey(),
+    Ok(count)
+}
+
+pub fn initialize(
+    user_pubkey: &Pubkey,
+    deposit_mint: &Pubkey,
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+    count: u64,
+) -> Instruction {
+    let (counter, _) = get_counter_address(payee, amount, duration);
+    let (subscription, _) = get_subscription_address(payee, amount, duration, count);
+    let deposit_vault =
+        spl_associated_token_account::get_associated_token_address(&subscription, &deposit_mint);
+
+    initialize_raw(
+        user_pubkey,
         &counter,
-        &sub,
-        &vault,
-        &mint,
+        &subscription,
+        &deposit_vault,
+        deposit_mint,
         payee,
         amount,
         duration,
     )
-    .unwrap();
-
-    let blockhash = rpc_client.get_latest_blockhash().unwrap();
-
-    // let transaction = Transaction::new_signed_with_payer(
-    //     &[instruction],
-    //     Some(&user.pubkey()),
-    //     &[user],
-    //     blockhash,
-    // );
-    let mut transaction = Transaction::new_with_payer(&[instruction], Some(&user.pubkey()));
-    transaction.sign(&[&user], blockhash);
-    if let Ok(txid) = rpc_client.send_and_confirm_transaction(&transaction) {
-        println!("Tx finished: {:?}", txid);
-    }
-
-    println!("Finished.");
 }
 
-pub fn initialize(
-    program_pubkey: &Pubkey,
+pub fn initialize_new(
+    rpc_client: &RpcClient,
+    user_pubkey: &Pubkey,
+    deposit_mint: &Pubkey,
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+) -> Result<Instruction, ClientError> {
+    let count = get_subscription_count(rpc_client, payee, amount, duration)?;
+    let instruction = initialize(user_pubkey, deposit_mint, payee, amount, duration, count);
+    Ok(instruction)
+}
+
+pub fn initialize_raw(
     user_pubkey: &Pubkey,
     counter_pubkey: &Pubkey,
     subscription_pubkey: &Pubkey,
@@ -96,7 +152,7 @@ pub fn initialize(
     payee: &Pubkey,
     amount: u64,
     duration: i64,
-) -> Result<Instruction, ProgramError> {
+) -> Instruction {
     let mut data = vec![0];
     data.append(&mut payee.as_ref().to_vec());
     data.append(&mut amount.to_le_bytes().to_vec());
@@ -114,29 +170,19 @@ pub fn initialize(
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
     ];
 
-    Ok(Instruction {
-        program_id: *program_pubkey,
+    Instruction {
+        program_id: program_id(),
         accounts,
-        data: data,
-    })
-}
-
-const LAMPORTS_PER_SOL: f64 = 1000000000.0;
-
-pub fn create_keypair() -> Keypair {
-    Keypair::new()
-}
-
-pub fn check_balance(rpc_client: &RpcClient, public_key: &Pubkey) -> Result<f64, Box<dyn Error>> {
-    Ok(rpc_client.get_balance(&public_key)? as f64 / LAMPORTS_PER_SOL)
+        data,
+    }
 }
 
 pub fn request_air_drop(
     rpc_client: &RpcClient,
-    pub_key: &Pubkey,
-    amount_sol: f64,
+    destination: &Pubkey,
+    amount: u64,
 ) -> Result<Signature, Box<dyn Error>> {
-    let sig = rpc_client.request_airdrop(&pub_key, (amount_sol * LAMPORTS_PER_SOL) as u64)?;
+    let sig = rpc_client.request_airdrop(&destination, amount)?;
     loop {
         let confirmed = rpc_client.confirm_transaction(&sig)?;
         if confirmed {
@@ -144,22 +190,4 @@ pub fn request_air_drop(
         }
     }
     Ok(sig)
-}
-
-pub fn transfer_funds(
-    rpc_client: &RpcClient,
-    sender_keypair: &Keypair,
-    receiver_pub_key: &Pubkey,
-    amount_sol: f64,
-) -> core::result::Result<Signature, Box<dyn Error>> {
-    let amount_lamports = (amount_sol * LAMPORTS_PER_SOL) as u64;
-
-    Ok(
-        rpc_client.send_and_confirm_transaction(&system_transaction::transfer(
-            &sender_keypair,
-            &receiver_pub_key,
-            amount_lamports,
-            rpc_client.get_latest_blockhash()?,
-        ))?,
-    )
 }
