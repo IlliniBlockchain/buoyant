@@ -1,21 +1,30 @@
-use std::error::Error;
 use solana_client::rpc_client::RpcClient;
 use solana_program::{
-    pubkey::Pubkey,
-    program_error::ProgramError,
     instruction::{AccountMeta, Instruction},
+    program_error::ProgramError,
+    pubkey::Pubkey,
     system_program,
-    sysvar::{rent, Sysvar}
+    sysvar::{rent, Sysvar},
 };
-use solana_sdk::{system_transaction, signature::{Keypair, Signature, Signer}, signers::Signers, transaction::Transaction};
+use solana_sdk::{
+    signature::{Keypair, Signature, Signer},
+    signers::Signers,
+    system_transaction,
+    transaction::Transaction,
+};
 use spl_associated_token_account;
 use spl_token;
+use std::error::Error;
+use std::str::FromStr;
 
 fn main() {
     println!("Started.");
     let rpc_client = RpcClient::new("https://api.devnet.solana.com");
 
-    let program_id = Pubkey::new("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf".as_bytes());
+    let program_id = match Pubkey::from_str("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf") {
+        Ok(pubkey) => pubkey,
+        Err(_) => panic!(),
+    };
 
     let user = Keypair::new();
     if let Ok(airdrop_sig) = request_air_drop(&rpc_client, &user.pubkey(), 1.0) {
@@ -56,8 +65,9 @@ fn main() {
         &mint,
         payee,
         amount,
-        duration
-    ).unwrap();
+        duration,
+    )
+    .unwrap();
 
     let blockhash = rpc_client.get_latest_blockhash().unwrap();
 
@@ -73,8 +83,6 @@ fn main() {
         println!("Tx finished: {:?}", txid);
     }
 
-
-
     println!("Finished.");
 }
 
@@ -89,7 +97,6 @@ pub fn initialize(
     amount: u64,
     duration: i64,
 ) -> Result<Instruction, ProgramError> {
-
     let mut data = vec![0];
     data.append(&mut payee.as_ref().to_vec());
     data.append(&mut amount.to_le_bytes().to_vec());
@@ -114,7 +121,6 @@ pub fn initialize(
     })
 }
 
-
 const LAMPORTS_PER_SOL: f64 = 1000000000.0;
 
 pub fn create_keypair() -> Keypair {
@@ -125,7 +131,11 @@ pub fn check_balance(rpc_client: &RpcClient, public_key: &Pubkey) -> Result<f64,
     Ok(rpc_client.get_balance(&public_key)? as f64 / LAMPORTS_PER_SOL)
 }
 
-pub fn request_air_drop(rpc_client: &RpcClient, pub_key: &Pubkey, amount_sol: f64) -> Result<Signature, Box<dyn Error>> {
+pub fn request_air_drop(
+    rpc_client: &RpcClient,
+    pub_key: &Pubkey,
+    amount_sol: f64,
+) -> Result<Signature, Box<dyn Error>> {
     let sig = rpc_client.request_airdrop(&pub_key, (amount_sol * LAMPORTS_PER_SOL) as u64)?;
     loop {
         let confirmed = rpc_client.confirm_transaction(&sig)?;
@@ -136,13 +146,20 @@ pub fn request_air_drop(rpc_client: &RpcClient, pub_key: &Pubkey, amount_sol: f6
     Ok(sig)
 }
 
-pub fn transfer_funds(rpc_client: &RpcClient, sender_keypair: &Keypair, receiver_pub_key: &Pubkey, amount_sol: f64) 
-        -> core::result::Result<Signature, Box<dyn Error>> {
+pub fn transfer_funds(
+    rpc_client: &RpcClient,
+    sender_keypair: &Keypair,
+    receiver_pub_key: &Pubkey,
+    amount_sol: f64,
+) -> core::result::Result<Signature, Box<dyn Error>> {
     let amount_lamports = (amount_sol * LAMPORTS_PER_SOL) as u64;
-    
-    Ok(rpc_client.send_and_confirm_transaction(
-        &system_transaction::transfer(
-            &sender_keypair, &receiver_pub_key, 
-            amount_lamports, 
-            rpc_client.get_latest_blockhash()?))?)
+
+    Ok(
+        rpc_client.send_and_confirm_transaction(&system_transaction::transfer(
+            &sender_keypair,
+            &receiver_pub_key,
+            amount_lamports,
+            rpc_client.get_latest_blockhash()?,
+        ))?,
+    )
 }
