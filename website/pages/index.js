@@ -150,7 +150,7 @@ export default function Home() {
           <div className={styles.threeBlocks}>
             <div className={styles.block}>
               <img src="./images/waterDrop.png" />
-              <h3>Tradable Subscriptions</h3>
+              <h3>Trade Subscriptions</h3>
               <p>
                 Tokenized subscriptions allow you to trade on open markets. Sell
                 a 30-day subscription after 20 days. Buy a 10-day trial for
