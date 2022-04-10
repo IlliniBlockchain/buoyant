@@ -1,0 +1,1 @@
+export {exampleFunction} from './example'

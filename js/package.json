@@ -1,0 +1,23 @@
+{
+  "name": "buoyant",
+  "version": "0.0.0",
+  "description": "Javascript API for interacting with Buoyant's on-chain subscriptions protocol.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IlliniBlockchain/buoyant.git"
+  },
+  "author": "Illini Blockchain",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IlliniBlockchain/buoyant/issues"
+  },
+  "homepage": "https://github.com/IlliniBlockchain/buoyant#readme"
+}
