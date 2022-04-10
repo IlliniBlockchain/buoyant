@@ -1,7 +1,10 @@
 use {
     crate::{
         state::{Counter, Subscription},
-        utils::{check_ata, check_pda, check_program_id, check_signer, check_writable},
+        utils::{
+            check_ata, check_pda, check_pda_with_bump, check_program_id, check_signer,
+            check_writable,
+        },
     },
     borsh::{BorshDeserialize, BorshSerialize},
     solana_program::{
@@ -47,15 +50,41 @@ pub fn process_initialize(
     check_writable(deposit_vault_ai)?;
 
     // PDAs
+    
     // check counter PDA
-    let counter_seeds = &[
-        b"subscription_counter",
-        payee.as_ref(),
-        &amount.to_le_bytes(),
-        &duration.to_le_bytes(),
-    ];
-    check_pda(counter_ai, counter_seeds, program_id)?;
-    let (_, counter_bump) = Pubkey::find_program_address(counter_seeds, program_id);
+    // check if this is the first subscription of its type
+    let (count, counter_bump) = if counter_ai.data_len() == 0 {
+        let count = 0;
+
+        // validate PDA without bump
+        let counter_seeds = &[
+            b"subscription_counter",
+            payee.as_ref(),
+            &amount.to_le_bytes(),
+            &duration.to_le_bytes(),
+        ];
+        check_pda(counter_ai, counter_seeds, program_id)?;
+        let (_, bump) = Pubkey::find_program_address(counter_seeds, program_id);
+
+        (count, bump)
+    } else {
+        let counter_data = Counter::try_from_slice(&counter_ai.try_borrow_data()?)?;
+        let count = counter_data.count;
+        let bump = counter_data.bump;
+
+        // validate PDA with bump
+        let counter_seeds = &[
+            b"subscription_counter",
+            payee.as_ref(),
+            &amount.to_le_bytes(),
+            &duration.to_le_bytes(),
+            &[bump],
+        ];
+        check_pda_with_bump(counter_ai, counter_seeds, program_id)?;
+
+        (count, bump)
+    };
+    // set counter_seeds for possible initialization later on
     let counter_seeds = &[
         b"subscription_counter",
         payee.as_ref(),
@@ -63,14 +92,6 @@ pub fn process_initialize(
         &duration.to_le_bytes(),
         &[counter_bump],
     ];
-
-    // check if this is the first subscription of its type
-    let count: u64 = if counter_ai.data_len() == 0 {
-        0
-    } else {
-        let counter_data = Counter::try_from_slice(&counter_ai.try_borrow_data()?)?;
-        counter_data.count
-    };
 
     // check subscription PDA
     let subscription_seeds = &[
@@ -174,7 +195,10 @@ pub fn process_initialize(
         )?;
     }
 
-    let counter = Counter { count: count + 1 };
+    let counter = Counter {
+        bump: counter_bump,
+        count: count + 1,
+    };
     counter.serialize(&mut *counter_ai.try_borrow_mut_data()?)?;
 
     Ok(())
