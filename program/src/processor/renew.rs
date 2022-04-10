@@ -197,7 +197,6 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
 
             // pay out variable amount
             let expire_token_amount = std::cmp::min(deposit_vault_amount, caller_amount);
-            // RUNNING INTO UNALIGNED POINTER ERROR HERE!
             invoke_signed(
                 &spl_token::instruction::transfer(
                     &spl_token::id(),
@@ -244,8 +243,11 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
                 .ok_or(TokenError::Overflow)?;
             **subscription_ai.lamports.borrow_mut() = 0;
 
-            subscription.active = false;
-            subscription.serialize(&mut *subscription_ai.try_borrow_mut_data()?)?;
+            // zero out account data
+            let mut subscription_data = subscription_ai.try_borrow_mut_data()?;
+            for i in 0..subscription_data.len() {
+                subscription_data[i] = 0;
+            }
         }
 
         return Ok(());
