@@ -1,6 +1,5 @@
 #![cfg(feature = "test-bpf")]
 
-
 use {
     solana_sdk::{signature::{Signer, Keypair}, transaction::Transaction},
     assert_matches::*,
@@ -12,7 +11,7 @@ use {
 };
 
 #[test]
-fn test_init() {
+fn test_initialize() {
     solana_logger::setup_with_default("solana_program_runtime=debug");
     let program_pubkey = Pubkey::new_unique();
 
@@ -65,7 +64,7 @@ fn test_init() {
             &payee.pubkey(),
             amount,
             duration
-        ).unwrap()],
+        )],
         Some(&user.pubkey()),
     );
     transaction.sign(&[&user], blockhash);

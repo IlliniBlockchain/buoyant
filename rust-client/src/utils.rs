@@ -18,7 +18,6 @@ use spl_token;
 use std::error::Error;
 use std::str::FromStr;
 
-
 pub fn program_id() -> Pubkey {
     Pubkey::from_str("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf").unwrap()
 }
@@ -48,6 +47,7 @@ pub fn get_subscription_address(
     ];
     Pubkey::find_program_address(subscription_seeds, &program_id())
 }
+
 
 pub fn get_subscription_count(
     rpc_client: &RpcClient,

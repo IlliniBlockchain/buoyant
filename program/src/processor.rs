@@ -10,6 +10,9 @@ use {
 pub mod initialize;
 pub mod renew;
 pub mod deposit;
+pub mod initialize2;
+pub mod renew2;
+pub mod close;
 
 use spl_token::*;
 
@@ -49,8 +52,21 @@ impl Processor {
                 msg!("Instruction: Renew");
                 renew::process_renew(program_id, accounts, count)?;
             }
+            SubscriptionInstruction::Initialize2 { payee, amount, duration, start_amount} => {
+                msg!("Instruction: Initialize2");
+                msg!("payee: {}", payee);
+                msg!("amount: {}", amount);
+                msg!("duration: {}", duration);
+                msg!("start_amount: {}", start_amount);
+                initialize2::process_initialize2(program_id, accounts, &payee, amount, duration, start_amount)?;
+            }
+            SubscriptionInstruction::Renew2 {} => {
+                msg!("Instruction: Renew2");
+                renew2::process_renew2(program_id, accounts)?;
+            }
             SubscriptionInstruction::Close {} => {
                 msg!("Instruction: Close");
+                close::process_close(program_id, accounts)?;
             }
         }
         
