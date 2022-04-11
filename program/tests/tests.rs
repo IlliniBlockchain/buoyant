@@ -11,7 +11,7 @@ use {
 };
 
 #[test]
-fn test_init() {
+fn test_initialize() {
     solana_logger::setup_with_default("solana_program_runtime=debug");
     let program_pubkey = Pubkey::new_unique();
 
@@ -54,7 +54,7 @@ fn test_init() {
     // Send and confirm txn
     let blockhash = rpc_client.get_latest_blockhash().unwrap();
     let mut transaction = Transaction::new_with_payer(
-        &[instruction::initialize_raw(
+        &[instruction::initialize(
             &program_pubkey,
             &user.pubkey(),
             &counter,

@@ -7,7 +7,6 @@ use solana_program::{
     sysvar,
 };
 use spl_associated_token_account;
-use crate::utils::{program_id, get_counter_address, get_subscription_address};
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub enum SubscriptionInstruction {
@@ -179,7 +178,8 @@ pub enum SubscriptionInstruction {
 
 // INSTRUCTION WRAPPERS
 
-pub fn initialize_raw(
+/// Creates an `Initialize` instruction
+pub fn initialize(
     program_pubkey: &Pubkey,
     user_pubkey: &Pubkey,
     counter_pubkey: &Pubkey,
@@ -216,31 +216,6 @@ pub fn initialize_raw(
     }
 }
 
-pub fn initialize(
-    user_pubkey: &Pubkey,
-    deposit_mint: &Pubkey,
-    payee: &Pubkey,
-    amount: u64,
-    duration: i64,
-    count: u64,
-) -> Instruction {
-    let (counter, _) = get_counter_address(payee, amount, duration);
-    let (subscription, _) = get_subscription_address(payee, amount, duration, count);
-    let deposit_vault =
-        spl_associated_token_account::get_associated_token_address(&subscription, &deposit_mint);
-
-    initialize_raw(
-        &program_id(),
-        user_pubkey,
-        &counter,
-        &subscription,
-        &deposit_vault,
-        deposit_mint,
-        payee,
-        amount,
-        duration,
-    )
-}
 
 /// Creates a `Withdraw` instruction.
 pub fn withdraw(

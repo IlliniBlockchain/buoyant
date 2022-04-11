@@ -255,7 +255,6 @@ dependencies = [
  "bytemuck",
  "num-derive",
  "num-traits",
- "solana-client",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",

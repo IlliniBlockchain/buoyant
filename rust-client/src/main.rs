@@ -26,7 +26,7 @@ fn main() {
     println!("Started.");
 
     // initialize RPC client/connection
-    let rpc_client = RpcClient::new("https://api.devnet.solana.com");
+    let rpc_client = RpcClient::new("https://api.devnet.solana.com".to_string());
 
     // initialize payer/signer
     let user = Keypair::new();
