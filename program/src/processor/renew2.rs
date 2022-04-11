@@ -1,6 +1,6 @@
 use {
     crate::{
-        state::{Counter, Subscription},
+        state::{Counter2, Subscription2},
         utils::{check_ata, check_pda, check_program_id, check_signer, check_writable},
     },
     borsh::{BorshDeserialize, BorshSerialize},
