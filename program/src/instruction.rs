@@ -106,22 +106,25 @@ pub enum SubscriptionInstruction {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable, signer]` user
-    ///   1. `[writable]` (PDA) subscription metadata
-    ///   2. `[writable]` (PDA) subscription counter
-    ///   3. `[writable]` (PDA) subscription ownership token mint
-    ///   4. `[writable]` (PDA) user subscription ownership token account
-    ///   5. `[writable]` (PDA) deposit vault
-    ///   6. `[]` (PDA) deposit vault mint
-    ///   7. `[]` system program
-    ///   8. `[]` sysvar rent
-    ///   9. `[]` token program
-    ///   10. `[]` associated token program
+    ///   1. `[writable]` user deposit token account
+    ///   2. `[writable]` (PDA) user subscription ownership token account
+    ///   3. `[]` payee - for ata creation
+    ///   4. `[writable]` (PDA) payee deposit token account
+    ///   5. `[writable]` (PDA) subscription metadata
+    ///   6. `[writable]` (PDA) subscription counter
+    ///   7. `[writable]` (PDA) subscription ownership token mint
+    ///   8. `[writable]` (PDA) deposit vault
+    ///   9. `[]` (PDA) deposit vault mint
+    ///   10. `[]` system program
+    ///   11. `[]` sysvar rent
+    ///   12. `[]` token program
+    ///   13. `[]` associated token program
     ///
     Initialize2 {
         payee: Pubkey,
         amount: u64,
         duration: i64,
-        startAmount: u64,
+        start_amount: u64,
     },
 
     /// Renews or deactivates a provided subscriptions.
@@ -138,9 +141,9 @@ pub enum SubscriptionInstruction {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable, signer]` caller
-    ///   1. `[writable]` (PDA) caller vault
+    ///   1. `[writable]` (PDA) caller deposit token account
     ///   2. `[]` payee - for ata creation
-    ///   3. `[writable]` (PDA) payee vault
+    ///   3. `[writable]` (PDA) payee deposit token account
     ///   4. `[writable]` (PDA) subscription metadata
     ///   5. `[writable]` (PDA) deposit vault
     ///   6. `[]` (PDA) deposit vault mint
