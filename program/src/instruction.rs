@@ -89,14 +89,87 @@ pub enum SubscriptionInstruction {
     ///
     Renew { count: u64 },
 
-    /// Withdraws rent from subscription metadata. Can only be called by account that
-    /// initialized the subscription.
+    /// Initiates a new active subscription. 
+    /// 
+    /// Initializes metadata account, initializes deposit vault,
+    /// initializes NFT mint, mints first and only NFT to caller,
+    /// freezes mint, initializes counter (if very first subscription),
+    /// increments counter (if new subscription).
+    /// 
+    /// Makes first token transfer to payee and sets subscription to active,
+    /// deposits starting amount into deposit vault. Starting amount must be at
+    /// least as great as typical fee in order to compensate callers upon expiration
+    /// without withdrawing rent.
+    /// 
+    /// Can be called on previously closed subscriptions, or brand new subscriptions.
     ///
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writable, signer]` user
-    ///   1. `[writable]` subscription metadata
-    ///   2. `[]` system program
+    ///   1. `[writable]` (PDA) subscription metadata
+    ///   2. `[writable]` (PDA) subscription counter
+    ///   3. `[writable]` (PDA) subscription ownership token mint
+    ///   4. `[writable]` (PDA) user subscription ownership token account
+    ///   5. `[writable]` (PDA) deposit vault
+    ///   6. `[]` (PDA) deposit vault mint
+    ///   7. `[]` system program
+    ///   8. `[]` sysvar rent
+    ///   9. `[]` token program
+    ///   10. `[]` associated token program
+    ///
+    Initialize2 {
+        payee: Pubkey,
+        amount: u64,
+        duration: i64,
+        startAmount: u64,
+    },
+
+    /// Renews or deactivates a provided subscriptions.
+    /// 
+    /// Same cases as previous instruction for renew versus expire.
+    /// If time is up and sufficient funds (`subscription.amount`) are present,
+    /// mark active and transfer funds to caller and payee. If time is up and
+    /// deposit vault has insufficient funds, mark inactive and transfer fee
+    /// to caller. Creates token accounts when necessary.
+    /// 
+    /// No longer creates new mint upon renewal. No longer closes accounts or
+    /// withdraws rent upon expiry.
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writable, signer]` caller
+    ///   1. `[writable]` (PDA) caller vault
+    ///   2. `[]` payee - for ata creation
+    ///   3. `[writable]` (PDA) payee vault
+    ///   4. `[writable]` (PDA) subscription metadata
+    ///   5. `[writable]` (PDA) deposit vault
+    ///   6. `[]` (PDA) deposit vault mint
+    ///   7. `[]` system program
+    ///   8. `[]` sysvar rent program
+    ///   9. `[]` token program
+    ///   10. `[]` associated token program
+    ///
+    Renew2 {},
+
+    /// Closes a subscription and associated accounts.
+    /// 
+    /// Zeroes out subscription data and withdraws rent. Closes
+    /// deposit vault and withdraws all funds. Only callable by
+    /// owner. Creates caller's token account to withdraw funds
+    /// if necessary.
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writable, signer]` user
+    ///   1. `[writable] user deposit/withdraw token account
+    ///   2. `[]` user subscription ownership token account
+    ///   3. `[writable]` subscription metadata
+    ///   4. `[writable]` deposit vault
+    ///   5. `[]` deposit mint - for ata creation
+    ///   6. `[]` system program
+    ///   7. `[]` sysvar rent program
+    ///   8. `[]` token program
+    ///   9. `[]` associated token program
     ///
     Close {},
 }
