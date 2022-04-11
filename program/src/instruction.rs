@@ -7,6 +7,8 @@ use solana_program::{
     sysvar,
 };
 use spl_associated_token_account;
+use solana_client::{client_error::ClientError, rpc_client::RpcClient};
+use crate::utils::{program_id, get_counter_address, get_subscription_address, get_subscription_count};
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub enum SubscriptionInstruction {
@@ -100,8 +102,9 @@ pub enum SubscriptionInstruction {
     Close {},
 }
 
-/// Creates an `Initialize` instruction.
-pub fn initialize(
+// INSTRUCTION WRAPPERS
+
+pub fn initialize_raw(
     program_pubkey: &Pubkey,
     user_pubkey: &Pubkey,
     counter_pubkey: &Pubkey,
@@ -111,7 +114,7 @@ pub fn initialize(
     payee: &Pubkey,
     amount: u64,
     duration: i64,
-) -> Result<Instruction, ProgramError> {
+) -> Instruction {
 
     let data = SubscriptionInstruction::Initialize {
         payee: *payee,
@@ -131,11 +134,50 @@ pub fn initialize(
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
     ];
 
-    Ok(Instruction {
+    Instruction {
         program_id: *program_pubkey,
         accounts,
         data: data.try_to_vec().unwrap(),
-    })
+    }
+}
+
+pub fn initialize(
+    user_pubkey: &Pubkey,
+    deposit_mint: &Pubkey,
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+    count: u64,
+) -> Instruction {
+    let (counter, _) = get_counter_address(payee, amount, duration);
+    let (subscription, _) = get_subscription_address(payee, amount, duration, count);
+    let deposit_vault =
+        spl_associated_token_account::get_associated_token_address(&subscription, &deposit_mint);
+
+    initialize_raw(
+        &program_id(),
+        user_pubkey,
+        &counter,
+        &subscription,
+        &deposit_vault,
+        deposit_mint,
+        payee,
+        amount,
+        duration,
+    )
+}
+
+pub fn initialize_new(
+    rpc_client: &RpcClient,
+    user_pubkey: &Pubkey,
+    deposit_mint: &Pubkey,
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+) -> Result<Instruction, ClientError> {
+    let count = get_subscription_count(rpc_client, payee, amount, duration)?;
+    let instruction = initialize(user_pubkey, deposit_mint, payee, amount, duration, count);
+    Ok(instruction)
 }
 
 /// Creates a `Withdraw` instruction.

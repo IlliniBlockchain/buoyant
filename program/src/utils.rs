@@ -6,6 +6,57 @@ use solana_program::{
 use spl_associated_token_account::*;
 use spl_token::{error::TokenError, state::Account as TokenAccount};
 use thiserror::Error;
+use std::str::FromStr;
+use solana_client::{client_error::ClientError, rpc_client::RpcClient};
+
+// CLIENT UTILS
+
+pub fn program_id() -> Pubkey {
+    Pubkey::from_str("Fpwgc9Tq7k2nMzVxYqPWwKGA7FbCQwo2BgekpT69Cgbf").unwrap()
+}
+
+pub fn get_counter_address(payee: &Pubkey, amount: u64, duration: i64) -> (Pubkey, u8) {
+    let counter_seeds = &[
+        b"subscription_counter",
+        payee.as_ref(),
+        &amount.to_le_bytes(),
+        &duration.to_le_bytes(),
+    ];
+    Pubkey::find_program_address(counter_seeds, &program_id())
+}
+
+pub fn get_subscription_address(
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+    count: u64,
+) -> (Pubkey, u8) {
+    let subscription_seeds = &[
+        b"subscription_metadata",
+        payee.as_ref(),
+        &amount.to_le_bytes(),
+        &duration.to_le_bytes(),
+        &count.to_le_bytes(),
+    ];
+    Pubkey::find_program_address(subscription_seeds, &program_id())
+}
+
+pub fn get_subscription_count(
+    rpc_client: &RpcClient,
+    payee: &Pubkey,
+    amount: u64,
+    duration: i64,
+) -> Result<u64, ClientError> {
+    let (counter, _) = get_counter_address(payee, amount, duration);
+    let count: u64 = match rpc_client.get_account_data(&counter) {
+        Ok(data) => u64::from_le_bytes(data.try_into().unwrap()),
+        Err(_) => 0,
+    };
+
+    Ok(count)
+}
+
+// ACCOUNT VALIDATION
 
 pub fn assert_msg(statement: bool, err: ProgramError, msg: &str) -> ProgramResult {
     if !statement {

@@ -1,6 +1,5 @@
 #![cfg(feature = "test-bpf")]
 
-
 use {
     solana_sdk::{signature::{Signer, Keypair}, transaction::Transaction},
     assert_matches::*,
@@ -55,7 +54,7 @@ fn test_init() {
     // Send and confirm txn
     let blockhash = rpc_client.get_latest_blockhash().unwrap();
     let mut transaction = Transaction::new_with_payer(
-        &[instruction::initialize(
+        &[instruction::initialize_raw(
             &program_pubkey,
             &user.pubkey(),
             &counter,
