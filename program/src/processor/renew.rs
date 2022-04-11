@@ -3,7 +3,7 @@ use {
         error::SubscriptionError,
         state::Subscription,
         utils::{
-            check_ata, check_initialized_ata, check_pda, check_program_id, check_signer,
+            check_ata, check_ata_initialized, check_pda, check_program_id, check_signer,
             check_writable,
         },
     },
@@ -97,12 +97,7 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
         return Err(TokenError::MintMismatch.into());
     }
 
-    check_ata(
-        deposit_vault_ai,
-        subscription_ai.key,
-        &subscription.deposit_mint,
-    )?;
-    check_initialized_ata(
+    check_ata_initialized(
         deposit_vault_ai,
         subscription_ai.key,
         &subscription.deposit_mint,
@@ -129,8 +124,7 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
     check_ata(payer_new_vault_ai, payer_ai.key, new_mint_ai.key)?;
 
     if let Some(current_mint) = subscription.mint {
-        check_ata(payer_old_vault_ai, payer_ai.key, &current_mint)?;
-        check_initialized_ata(payer_old_vault_ai, payer_ai.key, &current_mint)?;
+        check_ata_initialized(payer_old_vault_ai, payer_ai.key, &current_mint)?;
     }
 
     // programs
@@ -192,7 +186,7 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
                     ],
                 )?;
             } else {
-                check_initialized_ata(caller_vault_ai, caller_ai.key, &subscription.deposit_mint)?;
+                check_ata_initialized(caller_vault_ai, caller_ai.key, &subscription.deposit_mint)?;
             }
 
             // pay out variable amount
@@ -282,7 +276,7 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
             ],
         )?;
     } else {
-        check_initialized_ata(caller_vault_ai, caller_ai.key, &subscription.deposit_mint)?;
+        check_ata_initialized(caller_vault_ai, caller_ai.key, &subscription.deposit_mint)?;
     }
     if payee_vault_ai.data_len() == 0 {
         invoke(
@@ -303,7 +297,7 @@ pub fn process_renew(program_id: &Pubkey, accounts: &[AccountInfo], count: u64) 
             ],
         )?;
     } else {
-        check_initialized_ata(payee_vault_ai, payee, &subscription.deposit_mint)?;
+        check_ata_initialized(payee_vault_ai, payee, &subscription.deposit_mint)?;
     }
 
     // transfer to payee, transfer to caller, create mint, mint token

@@ -24,6 +24,7 @@ solana-program-test = "=1.9.4"
 solana-sdk = "=1.9.4"
 solana-validator = "=1.9.4"
 solana-logger = "=1.9.4"
+solana-client = "=1.9.4"
 
 [lib]
 crate-type = ["cdylib", "lib"]
