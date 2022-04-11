@@ -122,11 +122,7 @@ pub fn check_pda(account: &AccountInfo, seeds: &[&[u8]], program_id: &Pubkey) ->
     }
 }
 
-pub fn check_pda_with_bump(
-    account: &AccountInfo,
-    seeds: &[&[u8]],
-    program_id: &Pubkey,
-) -> ProgramResult {
+pub fn check_pda_with_bump(account: &AccountInfo, seeds: &[&[u8]], program_id: &Pubkey) -> ProgramResult {
     let pda = Pubkey::create_program_address(seeds, program_id)?;
     if *account.key != pda {
         msg!("Invalid PDA:\tExpected: {}\tGot: {}", &pda, account.key);

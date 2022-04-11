@@ -19,6 +19,7 @@ pub struct Subscription {
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub struct Counter {
+    pub bump: u8,
     pub count: u64,
 }
 
