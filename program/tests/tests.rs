@@ -64,7 +64,7 @@ fn test_init() {
             &payee.pubkey(),
             amount,
             duration
-        ).unwrap()],
+        )],
         Some(&user.pubkey()),
     );
     transaction.sign(&[&user], blockhash);

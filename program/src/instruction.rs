@@ -7,8 +7,7 @@ use solana_program::{
     sysvar,
 };
 use spl_associated_token_account;
-use solana_client::{client_error::ClientError, rpc_client::RpcClient};
-use crate::utils::{program_id, get_counter_address, get_subscription_address, get_subscription_count};
+use crate::utils::{program_id, get_counter_address, get_subscription_address};
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub enum SubscriptionInstruction {
@@ -165,19 +164,6 @@ pub fn initialize(
         amount,
         duration,
     )
-}
-
-pub fn initialize_new(
-    rpc_client: &RpcClient,
-    user_pubkey: &Pubkey,
-    deposit_mint: &Pubkey,
-    payee: &Pubkey,
-    amount: u64,
-    duration: i64,
-) -> Result<Instruction, ClientError> {
-    let count = get_subscription_count(rpc_client, payee, amount, duration)?;
-    let instruction = initialize(user_pubkey, deposit_mint, payee, amount, duration, count);
-    Ok(instruction)
 }
 
 /// Creates a `Withdraw` instruction.
