@@ -246,3 +246,52 @@ pub fn withdraw(
         data: data.try_to_vec().unwrap(),
     })
 }
+
+/// Creates an `Initialize2` instruction
+pub fn initialize2(
+    program_id: &Pubkey,
+    user: &Pubkey,
+    user_deposit_account: &Pubkey,
+    user_subscription_token_account: &Pubkey,
+    payee: &Pubkey,
+    payee_deposit_account: &Pubkey,
+    subscription: &Pubkey,
+    subscription_counter: &Pubkey,
+    subscription_mint: &Pubkey,
+    deposit_vault: &Pubkey,
+    deposit_mint: &Pubkey,
+    amount: u64,
+    duration: i64,
+    start_amount: u64,
+) -> Instruction {
+
+    let data = SubscriptionInstruction::Initialize2 {
+        payee: *payee,
+        amount,
+        duration,
+        start_amount
+    };
+
+    let accounts = vec![
+        AccountMeta::new(*user, true),
+        AccountMeta::new(*user_deposit_account, false),
+        AccountMeta::new(*user_subscription_token_account, false),
+        AccountMeta::new_readonly(*payee, false),
+        AccountMeta::new(*payee_deposit_account, false),
+        AccountMeta::new(*subscription, false),
+        AccountMeta::new(*subscription_counter, false),
+        AccountMeta::new(*subscription_mint, false),
+        AccountMeta::new(*deposit_vault, false),
+        AccountMeta::new_readonly(*deposit_mint, false),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+    ];
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: data.try_to_vec().unwrap(),
+    }
+}
