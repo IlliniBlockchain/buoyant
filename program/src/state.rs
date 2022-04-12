@@ -34,6 +34,7 @@ pub struct Subscription2 {
     pub payee: Pubkey,
     pub amount: u64,
     pub duration: i64,
+    pub index: u64,
     pub next_renew_time: i64,
 }
 
