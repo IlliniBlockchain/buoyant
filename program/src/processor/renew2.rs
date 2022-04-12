@@ -39,7 +39,7 @@ pub fn process_renew2(
     // Execute instruction
 
     // if time is not up yet, revert
-    // calculate fee/transfer amount
+    // calculate fee/transfer amount - should account for leaving minimum fee in deposit vault
     // if deposit vault as insufficient funds
     //      expire
     //          send fee funds to caller (initialize token account if needed)
