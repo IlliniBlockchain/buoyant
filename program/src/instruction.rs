@@ -150,7 +150,7 @@ pub enum SubscriptionInstruction {
     ///   9. `[]` token program
     ///   10. `[]` associated token program
     ///
-    Renew2 {},
+    Renew2 { count: u64 },
 
     /// Closes a subscription and associated accounts.
     ///
