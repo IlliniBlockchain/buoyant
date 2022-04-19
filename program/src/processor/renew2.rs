@@ -21,6 +21,19 @@ pub fn process_renew2(
 
     // Get accounts
 
+    let accounts_iter = &mut accounts.iter();
+    let caller_ai = next_account_info(accounts_iter)?;
+    let caller_deposit_ai = next_account_info(accounts_iter)?;
+    let payee = next_account_info(accounts_iter)?;
+    let payee_deposit = next_account_info(accounts_iter)?;
+    let subscription_ai = next_account_info(accounts_iter)?;
+    let deposit_vault_ai = next_account_info(accounts_iter)?;
+    let deposit_mint = next_account_info(accounts_iter)?;
+    let system_program_ai = next_account_info(accounts_iter)?;
+    let sysvar_rent_ai = next_account_info(accounts_iter)?;
+    let token_program_ai = next_account_info(accounts_iter)?;
+    let associated_token_program_ai = next_account_info(accounts_iter)?;
+    
     // Validate accounts
 
     // caller - check signer
