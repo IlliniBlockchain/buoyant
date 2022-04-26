@@ -20,7 +20,13 @@
     "url": "https://github.com/IlliniBlockchain/buoyant/issues"
   },
   "homepage": "https://github.com/IlliniBlockchain/buoyant#readme",
+  "dependencies": {
+    "@solana/spl-token": "^0.1.8",
+    "@solana/web3.js": "^1.31.0",
+    "bn.js": "^5.2.0"
+  },
   "devDependencies": {
+    "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.1.0",
     "chai": "^4.3.6",
