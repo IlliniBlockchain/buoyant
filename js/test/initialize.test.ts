@@ -12,18 +12,42 @@ import {
   TransactionInstruction,
   SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
-import {
-  Token,
-  TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+import { getOrCreateFeePayer, getOrCreateMint } from './utils';
 const BN = require("bn.js");
 
 describe('Initialize', () => {
 
-  let payee: PublicKey;
+  // beforeEach(function (done) {
+    // this.timeout(15000); // A very long environment setup.
+    // setTimeout(done, 5000);
+  // });
 
-  it('initialize' , () => {
+  let connection: Connection;
+  let feePayer: Keypair;
+  let subscriptionCounter: PublicKey;
+  let subscription: PublicKey;
+  let depositMint: PublicKey;
+  let depositVault: PublicKey;
+  let payee: PublicKey;
+  let amount: number;
+  let duration: number;
+
+  before(async () => {
+    connection = new Connection("https://api.devnet.solana.com/");
+    feePayer = await getOrCreateFeePayer(connection);
+
+    // need to figure out way to have defaults so it doesn't take forever
+    // depositMint = await getOrCreateMint(connection);
+
+    // find PDAs and stuff
+
+    payee = new Keypair().publicKey;
+    amount = 200;
+    duration = 60;
+
+  })
+
+  it('initialize', () => {
 
 
 
