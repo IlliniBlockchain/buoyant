@@ -22,6 +22,7 @@ import {
   getNewSubscriptionAddress,
   getSubscriptionCounterAddress,
   initializeInstruction,
+  getSubscription,
 } from "../src";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 
@@ -90,5 +91,15 @@ describe("Initialize", () => {
     });
 
     console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+
+    const sub = await getSubscription(connection, subscription);
+    expect(sub.active).to.equal(false);
+    expect(sub.mint).to.equal(null);
+    expect(sub.depositVault.toBase58()).to.equal(depositVault.toBase58());
+    expect(sub.depositMint.toBase58()).to.equal(depositMint.toBase58());
+    expect(Number(sub.amount)).to.equal(amount);
+    expect(Number(sub.duration)).to.equal(duration);
+    expect(Number(sub.nextRenewTime)).to.equal(0);
+    expect(Number(sub.renewalCount)).to.equal(0);
   });
 });
