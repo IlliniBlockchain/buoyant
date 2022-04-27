@@ -23,10 +23,20 @@ const tokenBalanceThreshold = 1 * 10 ** (mintDecimals - 4); // arbitrary/tempora
 export const getOrCreateFeePayer = async (
   connection: Connection
 ): Promise<Keypair> => {
-  const balance = await connection.getBalance(feePayer.publicKey);
-  if (balance < balanceThreshold) {
-    const airdropTx = await connection.requestAirdrop(feePayer.publicKey, 2e9);
-    // await connection.confirmTransaction(airdropTx, "finalized");
+  try {
+    const balance = await connection.getBalance(feePayer.publicKey);
+    if (balance < balanceThreshold) {
+      const airdropTx = await connection.requestAirdrop(
+        feePayer.publicKey,
+        2e9
+      );
+      // await connection.confirmTransaction(airdropTx, "finalized");
+    }
+  } catch (err) {
+    console.log(err);
+    console.log(
+      "If you've run into an error saying 'failed to get balance of account', just try to run it again."
+    );
   }
   return feePayer;
 };
