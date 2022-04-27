@@ -17,14 +17,15 @@ import {
   getOrCreateMint,
   getOrCreateTokenAccount,
 } from "./utils";
-import BN from "bn.js";
+import { BN } from "bn.js";
+import {
+  getNewSubscriptionAddress,
+  getSubscriptionCounterAddress,
+  initializeInstruction,
+} from "../src";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
 
 describe("Initialize", () => {
-  // beforeEach(function (done) {
-  // this.timeout(15000); // A very long environment setup.
-  // setTimeout(done, 5000);
-  // });
-
   let connection: Connection;
   let feePayer: Keypair;
   let subscriptionCounter: PublicKey;
@@ -35,20 +36,59 @@ describe("Initialize", () => {
   let amount: number;
   let duration: number;
 
+  // Setup data to call ininitialize instruction
   before(async () => {
     connection = new Connection("https://api.devnet.solana.com/");
     feePayer = await getOrCreateFeePayer(connection);
 
-    // need to figure out way to have defaults so it doesn't take forever
-    depositMint = await getOrCreateMint(connection);
-    depositVault = await getOrCreateTokenAccount(connection);
-
-    // find PDAs and stuff
-
+    // subscription data
     payee = new Keypair().publicKey;
     amount = 200;
     duration = 60;
+
+    // find PDAs and stuff
+    subscriptionCounter = await getSubscriptionCounterAddress(
+      payee,
+      amount,
+      duration
+    );
+    subscription = await getNewSubscriptionAddress(
+      connection,
+      payee,
+      amount,
+      duration
+    );
+
+    // need to figure out way to have defaults so it doesn't take forever
+    depositMint = await getOrCreateMint(connection);
+    depositVault = await getAssociatedTokenAddress(
+      depositMint,
+      subscription,
+      true
+    );
   });
 
-  it("initialize", () => {});
+  it("initialize", async () => {
+    const initIx = initializeInstruction(
+      feePayer.publicKey,
+      subscriptionCounter,
+      subscription,
+      depositVault,
+      depositMint,
+      payee,
+      amount,
+      duration
+    );
+
+    const tx = new Transaction();
+    tx.add(initIx);
+
+    const txid = await sendAndConfirmTransaction(connection, tx, [feePayer], {
+      skipPreflight: true,
+      preflightCommitment: "confirmed",
+      // confirmation: "confirmed",
+    });
+
+    console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
+  });
 });

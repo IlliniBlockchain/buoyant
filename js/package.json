@@ -8,7 +8,7 @@
     "/dist"
   ],
   "scripts": {
-    "test": "mocha --timeout 15000 -r ts-node/register test/**/*.test.ts"
+    "test": "mocha --timeout 20000 -r ts-node/register test/**/*.test.ts"
   },
   "repository": {
     "type": "git",
