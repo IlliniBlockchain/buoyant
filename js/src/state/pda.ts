@@ -57,7 +57,7 @@ export const getSubscriptionCount = async (
   const count =
     accountInfo == null || accountInfo.data.length == 0
       ? new BN(0)
-      : new BN(accountInfo.data, (endian = "le"));
+      : new BN(accountInfo.data, "le");
   return count.toNumber();
 };
 

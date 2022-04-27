@@ -6,17 +6,17 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "../constants";
 import { BN } from "bn.js";
-import { TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 
 export const initializeInstruction = (
-  user,
-  counterKey,
-  subKey,
-  depositVault,
-  depositVaultMint,
-  payeeKey,
-  amount,
-  duration
+  user: PublicKey,
+  counterKey: PublicKey,
+  subKey: PublicKey,
+  depositVault: PublicKey,
+  depositVaultMint: PublicKey,
+  payeeKey: PublicKey,
+  amount: number,
+  duration: number
 ) => {
   const accounts = [
     { pubkey: user, isSigner: true, isWritable: true },
