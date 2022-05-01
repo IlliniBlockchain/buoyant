@@ -2,3 +2,4 @@ program/target
 rust-client/target
 scripts/node_modules
 scripts/dist
+*/.DS_Store
