@@ -68,6 +68,9 @@ impl Processor {
                 msg!("Instruction: Close");
                 close::process_close(program_id, accounts)?;
             }
+            SubscriptionInstruction::Registry { count } => {
+                msg!("Instruction: Registry");
+            }
         }
         
         Ok(())

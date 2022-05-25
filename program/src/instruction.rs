@@ -173,6 +173,20 @@ pub enum SubscriptionInstruction {
     ///   9. `[]` associated token program
     ///
     Close {},
+
+    /// Creates and maintains a registry containing subscription data for active subscriptions.
+    /// 
+    /// Accounts expected by this instruction:
+    /// 
+    ///     0. '[writable, signer]' user
+    ///     1. '[writable]' registry
+    ///     2. '[]' subscription metadata
+    ///     3. '[writable]' new registry
+    ///     4. '[writable]' counter
+    ///     3. '[]' system program
+    ///     4. '[]' sysvar rent program
+    /// 
+    Registry { count: u64 },
 }
 
 // INSTRUCTION WRAPPERS
